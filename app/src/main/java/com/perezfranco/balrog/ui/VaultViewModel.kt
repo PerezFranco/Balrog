@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,20 +41,49 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private val searchQuery = MutableStateFlow("")
     val query: StateFlow<String> = searchQuery.asStateFlow()
 
+    /** Folder shown in the list: null = everything, "" = items in no folder. */
+    private val folderFilter = MutableStateFlow<String?>(null)
+    val selectedFolder: StateFlow<String?> = folderFilter.asStateFlow()
+
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val items: StateFlow<List<VaultItem>> = SessionManager.isUnlocked
+    private val allItems: StateFlow<List<VaultItem>> = SessionManager.isUnlocked
         .flatMapLatest { unlocked ->
             if (unlocked) repository.observeItems() else flowOf(emptyList())
         }
-        .combine(searchQuery) { items, q ->
-            if (q.isBlank()) items
-            else items.filter { item ->
-                item.title.contains(q, ignoreCase = true) ||
-                    (item is PasswordEntry &&
-                        (item.username.contains(q, true) || item.url.contains(q, true)))
-            }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Names of all folders in use, alphabetically. */
+    val folders: StateFlow<List<String>> = allItems
+        .map { items ->
+            items.map { it.folder }.filter { it.isNotBlank() }.distinct()
+                .sortedWith(String.CASE_INSENSITIVE_ORDER)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** The items to list: those in the selected folder that match the search. */
+    val items: StateFlow<List<VaultItem>> =
+        combine(allItems, searchQuery, folderFilter) { items, q, folder ->
+            // A filter on a folder that no longer exists shows everything.
+            val active = folder?.takeIf { it.isEmpty() || items.any { item -> item.folder == it } }
+            items.filter { item ->
+                (active == null || item.folder == active) && (q.isBlank() ||
+                    item.title.contains(q, ignoreCase = true) ||
+                    (item is PasswordEntry &&
+                        (item.username.contains(q, true) || item.url.contains(q, true))))
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun selectFolder(folder: String?) {
+        folderFilter.value = folder
+    }
+
+    /** Moves everything in [old] to [new]; an empty [new] just removes the folder. */
+    fun renameFolder(old: String, new: String) {
+        viewModelScope.launch {
+            if (repository.renameFolder(old, new.trim()) > 0) backupManager.onVaultChanged()
+            if (folderFilter.value == old) folderFilter.value = new.trim().ifEmpty { null }
+        }
+    }
 
     fun setQuery(q: String) {
         searchQuery.value = q

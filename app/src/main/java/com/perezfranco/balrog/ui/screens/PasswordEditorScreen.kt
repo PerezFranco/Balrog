@@ -31,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,11 @@ fun PasswordEditorScreen(
     var notes by remember { mutableStateOf("") }
     var totp by remember { mutableStateOf("") }
     var generateMenuOpen by remember { mutableStateOf(false) }
+    // New items start in the folder being viewed.
+    var folder by remember {
+        mutableStateOf(if (itemId == 0L) viewModel.selectedFolder.value.orEmpty() else "")
+    }
+    val folders by viewModel.folders.collectAsState()
     var confirmDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(itemId) {
@@ -72,6 +78,7 @@ fun PasswordEditorScreen(
                 url = it.url
                 notes = it.notes
                 totp = it.totp
+                folder = it.folder
             }
             loaded = true
         }
@@ -191,6 +198,8 @@ fun PasswordEditorScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(12.dp))
+            FolderField(value = folder, onValueChange = { folder = it }, existing = folders)
+            Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
@@ -210,6 +219,7 @@ fun PasswordEditorScreen(
                             url = url,
                             notes = notes,
                             totp = totp,
+                            folder = folder.trim(),
                         )
                     ) { onBack() }
                 },

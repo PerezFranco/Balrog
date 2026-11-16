@@ -53,6 +53,26 @@ class VaultRepository(private val dao: VaultDao) {
 
     suspend fun deleteAll() = dao.deleteAll()
 
+    /**
+     * Moves every item in folder [old] to folder [new] (empty = no folder).
+     * Folders exist only as names on items, so this is also how a folder is
+     * renamed, merged into another, or removed. Returns the number moved.
+     */
+    suspend fun renameFolder(old: String, new: String): Int {
+        var moved = 0
+        for (entity in dao.getAll()) {
+            val item = decryptOrNull(entity) ?: continue
+            if (item.folder != old) continue
+            val updated = when (item) {
+                is PasswordEntry -> item.copy(folder = new)
+                is SecureNote -> item.copy(folder = new)
+            }
+            dao.update(entity.copy(payload = encrypt(updated.toPayloadJson())))
+            moved++
+        }
+        return moved
+    }
+
     // ---- Backup ----------------------------------------------------------------
 
     /** Every record exactly as stored (still encrypted), for a backup file. */

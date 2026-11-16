@@ -23,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +43,11 @@ fun NoteEditorScreen(
     var loaded by remember { mutableStateOf(itemId == 0L) }
     var title by remember { mutableStateOf("") }
     var body by remember { mutableStateOf("") }
+    // New items start in the folder being viewed.
+    var folder by remember {
+        mutableStateOf(if (itemId == 0L) viewModel.selectedFolder.value.orEmpty() else "")
+    }
+    val folders by viewModel.folders.collectAsState()
     var confirmDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(itemId) {
@@ -49,6 +55,7 @@ fun NoteEditorScreen(
             (viewModel.getItem(itemId) as? SecureNote)?.let {
                 title = it.title
                 body = it.body
+                folder = it.folder
             }
             loaded = true
         }
@@ -95,11 +102,13 @@ fun NoteEditorScreen(
                 minLines = 10,
                 modifier = Modifier.fillMaxWidth(),
             )
+            Spacer(Modifier.height(12.dp))
+            FolderField(value = folder, onValueChange = { folder = it }, existing = folders)
             Spacer(Modifier.height(20.dp))
             Button(
                 onClick = {
                     viewModel.saveItem(
-                        SecureNote(id = itemId, title = title, body = body)
+                        SecureNote(id = itemId, title = title, body = body, folder = folder.trim())
                     ) { onBack() }
                 },
                 enabled = loaded && (title.isNotBlank() || body.isNotBlank()),

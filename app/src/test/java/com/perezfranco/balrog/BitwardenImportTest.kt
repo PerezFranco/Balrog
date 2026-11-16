@@ -70,6 +70,8 @@ class BitwardenImportTest {
         assertEquals("GitHub", totp.issuer)
         assertEquals(1672628645678, entry.createdAt)
         assertEquals(1714979289000, entry.updatedAt)
+        assertEquals("Work", entry.folder)
+        assertEquals("", (items[1] as PasswordEntry).folder)
     }
 
     @Test
@@ -78,7 +80,7 @@ class BitwardenImportTest {
         assertTrue(notes.startsWith("recovery codes in the safe"))
         assertTrue("Website: https://gist.github.com" in notes)
         assertTrue("PIN: 4321" in notes)
-        assertTrue("Folder: Work" in notes)
+        assertTrue("Work" !in notes)
     }
 
     @Test
@@ -107,8 +109,9 @@ class BitwardenImportTest {
         assertEquals("Visa", card.title)
         for (line in listOf(
             "Cardholder name: R P", "Number: 4111111111111111", "Exp month: 12",
-            "Exp year: 2030", "Code: 123", "Folder: Work",
+            "Exp year: 2030", "Code: 123",
         )) assertTrue("$line missing from ${card.body}", line in card.body)
+        assertEquals("Work", card.folder)
 
         val identity = items[5] as SecureNote
         assertTrue(identity.body.startsWith("n\n\n"))
@@ -134,9 +137,10 @@ class BitwardenImportTest {
         assertEquals("https://a.example", entry.url)
         assertEquals("JBSWY3DPEHPK3PXP", Totp.parse(entry.totp).secret)
         assertEquals(
-            "line one\nline \"two\"\n\nWebsite: https://b.example\nPIN: 99\nFolder: Work",
+            "line one\nline \"two\"\n\nWebsite: https://b.example\nPIN: 99",
             entry.notes,
         )
+        assertEquals("Work", entry.folder)
         val note = parsed[1] as SecureNote
         assertEquals("Door code", note.title)
         assertEquals("1234", note.body)

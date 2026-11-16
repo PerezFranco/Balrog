@@ -7,6 +7,8 @@ fingerprint and face unlock, and two-factor codes built into each entry. *It sha
 ## Features
 
 - **Password vault** — titles, usernames, passwords, URLs, and notes
+- **Folders** — file entries and notes under folders and filter the list by
+  folder; folder names are encrypted along with everything else
 - **Built-in two-factor codes** — any entry can be its own authenticator:
   scan the site's QR code (or type its setup key) and the entry shows the
   live 6-digit code next to the password, ready to copy
@@ -133,8 +135,8 @@ version history (or an occasional manual backup) if you want older copies.
 Settings → **Import from Bitwarden** reads a Bitwarden vault export: the
 unencrypted `.json` format (recommended — it carries everything) or `.csv`.
 Logins come across with username, password, first website and two-factor
-setup. Anything Balrog has no dedicated field for — extra websites, custom
-fields, folder names, and whole cards and identities — is kept as readable
+setup, and items keep their Bitwarden folder. Anything Balrog has no dedicated field for — extra websites, custom
+fields, and whole cards and identities — is kept as readable
 text in the entry's notes or in a secure note, so nothing in the export is
 lost. Importing the same file twice adds nothing. Bitwarden's encrypted
 export formats are not supported; the unencrypted file holds every password

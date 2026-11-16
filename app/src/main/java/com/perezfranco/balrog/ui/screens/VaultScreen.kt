@@ -1,5 +1,15 @@
 package com.perezfranco.balrog.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,6 +63,11 @@ fun VaultScreen(
     val items by viewModel.items.collectAsState()
     val query by viewModel.query.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
+    val folders by viewModel.folders.collectAsState()
+    val selectedFolder by viewModel.selectedFolder.collectAsState()
+    // A selected folder that has since been emptied or renamed counts as "All".
+    val activeFolder = selectedFolder?.takeIf { it.isEmpty() || it in folders }
+    var renaming by remember { mutableStateOf<String?>(null) }
 
     val passwords = items.filterIsInstance<PasswordEntry>()
     val notes = items.filterIsInstance<SecureNote>()
@@ -102,6 +117,31 @@ fun VaultScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
             )
+            if (folders.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                ) {
+                    val chips = listOf<Pair<String?, String>>(null to "All") +
+                        folders.map { it to it } + ("" to "No folder")
+                    chips.forEach { (folder, name) ->
+                        FilterChip(
+                            selected = activeFolder == folder,
+                            onClick = { viewModel.selectFolder(folder) },
+                            label = { Text(name) },
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    if (!activeFolder.isNullOrEmpty()) {
+                        IconButton(onClick = { renaming = activeFolder }) {
+                            Icon(Icons.Filled.Edit, contentDescription = "Rename or remove folder")
+                        }
+                    }
+                }
+            }
             TabRow(selectedTabIndex = selectedTab) {
                 Tab(
                     selected = selectedTab == 0,
@@ -116,7 +156,8 @@ fun VaultScreen(
             }
             if (selectedTab == 0) {
                 ItemList(
-                    empty = "No passwords yet. Tap + to add one.",
+                    empty = if (activeFolder == null) "No passwords yet. Tap + to add one."
+                    else "No passwords in this folder.",
                     content = {
                         items(passwords, key = { it.id }) { entry ->
                             ListItem(
@@ -145,7 +186,8 @@ fun VaultScreen(
                 )
             } else {
                 ItemList(
-                    empty = "No secure notes yet. Tap + to add one.",
+                    empty = if (activeFolder == null) "No secure notes yet. Tap + to add one."
+                    else "No secure notes in this folder.",
                     content = {
                         items(notes, key = { it.id }) { note ->
                             ListItem(
@@ -164,6 +206,58 @@ fun VaultScreen(
             }
         }
     }
+
+    renaming?.let { folder ->
+        RenameFolderDialog(
+            folder = folder,
+            onRename = { newName ->
+                renaming = null
+                viewModel.renameFolder(folder, newName)
+            },
+            onDismiss = { renaming = null },
+        )
+    }
+}
+
+@Composable
+private fun RenameFolderDialog(
+    folder: String,
+    onRename: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(folder) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Folder \"$folder\"") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Folder name") },
+                    singleLine = true,
+                )
+                Text(
+                    "Renaming to an existing folder merges the two. Removing the " +
+                        "folder keeps its items; they just end up in no folder.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = name.isNotBlank() && name.trim() != folder,
+                onClick = { onRename(name) },
+            ) { Text("Rename") }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = { onRename("") }) { Text("Remove folder") }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        },
+    )
 }
 
 @Composable

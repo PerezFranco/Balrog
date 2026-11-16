@@ -12,9 +12,10 @@ import java.time.Instant
  * Reads a Bitwarden vault export — the unencrypted `.json` format (which
  * carries everything) or the `.csv` format (logins and notes only).
  *
- * Logins become password entries, including their two-factor setup. Balrog
+ * Logins become password entries, including their two-factor setup, and
+ * items keep their Bitwarden folder. Balrog
  * has no dedicated cards or identities, so those — like anything else it has
- * no field for (extra websites, custom fields, folder names) — are kept as
+ * no field for (extra websites, custom fields) — are kept as
  * readable text in a secure note or in the entry's notes; nothing in the
  * export is dropped.
  */
@@ -109,7 +110,8 @@ object BitwardenImport {
                 }
                 SecureNote(
                     title = item.str("name"),
-                    body = composeNotes(lines + fields, item.str("notes"), groups),
+                    body = composeNotes(lines + fields, item.str("notes"), groups.drop(1)),
+                    folder = groups.firstOrNull().orEmpty(),
                     createdAt = created,
                     updatedAt = updated,
                 )
@@ -135,7 +137,8 @@ object BitwardenImport {
             if (row.col("type").trim().lowercase() == "note") {
                 SecureNote(
                     title = row.col("name"),
-                    body = composeNotes(fields, row.col("notes"), groups),
+                    body = composeNotes(fields, row.col("notes"), groups.drop(1)),
+                    folder = groups.firstOrNull().orEmpty(),
                 )
             } else {
                 login(
@@ -177,14 +180,18 @@ object BitwardenImport {
             username = username,
             password = password,
             url = uris.firstOrNull().orEmpty(),
-            notes = composeNotes(extras + fields, notes, groups),
+            notes = composeNotes(extras + fields, notes, groups.drop(1)),
             totp = config?.toUri().orEmpty(),
+            folder = groups.firstOrNull().orEmpty(),
             createdAt = createdAt,
             updatedAt = updatedAt,
         )
     }
 
-    /** The original notes first, then whatever Balrog has no field for. */
+    /**
+     * The original notes first, then whatever Balrog has no field for.
+     * [groups] are folders/collections beyond the one the item is filed in.
+     */
     private fun composeNotes(
         lines: List<Pair<String, String>>,
         notes: String,
@@ -192,7 +199,7 @@ object BitwardenImport {
     ): String {
         val extra = lines.filter { it.second.isNotBlank() }.map { (label, value) ->
             if (label.isBlank()) value else "$label: $value"
-        } + groups.map { "Folder: $it" }
+        } + groups.map { "Also in: $it" }
         return listOf(notes.trim(), extra.joinToString("\n"))
             .filter { it.isNotEmpty() }
             .joinToString("\n\n")

@@ -8,6 +8,9 @@ enum class ItemType { PASSWORD, NOTE }
 sealed interface VaultItem {
     val id: Long
     val title: String
+
+    /** Name of the folder this item is filed under, or empty for none. */
+    val folder: String
     val createdAt: Long
     val updatedAt: Long
 
@@ -23,6 +26,7 @@ data class PasswordEntry(
     val notes: String = "",
     /** Two-factor setup as an `otpauth://totp/…` URI, or empty if none. */
     val totp: String = "",
+    override val folder: String = "",
     override val createdAt: Long = 0,
     override val updatedAt: Long = 0,
 ) : VaultItem {
@@ -33,6 +37,7 @@ data class PasswordEntry(
         .put("url", url)
         .put("notes", notes)
         .put("totp", totp)
+        .put("folder", folder)
         .toString()
 
     companion object {
@@ -46,6 +51,7 @@ data class PasswordEntry(
                 url = obj.optString("url"),
                 notes = obj.optString("notes"),
                 totp = obj.optString("totp"),
+                folder = obj.optString("folder"),
                 createdAt = entity.createdAt,
                 updatedAt = entity.updatedAt,
             )
@@ -57,12 +63,14 @@ data class SecureNote(
     override val id: Long = 0,
     override val title: String = "",
     val body: String = "",
+    override val folder: String = "",
     override val createdAt: Long = 0,
     override val updatedAt: Long = 0,
 ) : VaultItem {
     override fun toPayloadJson(): String = JSONObject()
         .put("title", title)
         .put("body", body)
+        .put("folder", folder)
         .toString()
 
     companion object {
@@ -72,6 +80,7 @@ data class SecureNote(
                 id = entity.id,
                 title = obj.optString("title"),
                 body = obj.optString("body"),
+                folder = obj.optString("folder"),
                 createdAt = entity.createdAt,
                 updatedAt = entity.updatedAt,
             )
