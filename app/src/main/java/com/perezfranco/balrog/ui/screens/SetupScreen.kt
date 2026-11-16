@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,8 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.perezfranco.balrog.security.PassphraseGenerator
+import com.perezfranco.balrog.security.WordList
 import com.perezfranco.balrog.ui.VaultViewModel
 
 private const val MIN_MASTER_PASSWORD_LENGTH = 10
@@ -28,6 +33,8 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
     var password by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf("") }
     var working by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var suggestion by remember { mutableStateOf<String?>(null) }
 
     val tooShort = password.isNotEmpty() && password.length < MIN_MASTER_PASSWORD_LENGTH
     val mismatch = confirm.isNotEmpty() && confirm != password
@@ -44,7 +51,7 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
         Text("Balrog", style = MaterialTheme.typography.displaySmall)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Choose a master password. It is the only way to open your vault — " +
+            "Choose a master password or passphrase. It is the only way to open your vault — " +
                 "it is never stored, and it cannot be recovered if forgotten.",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
@@ -61,6 +68,25 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
                 else -> null
             },
         )
+        TextButton(onClick = {
+            suggestion = PassphraseGenerator.generate(WordList.load(context), wordCount = 6)
+        }) {
+            Text(if (suggestion == null) "Suggest a passphrase" else "Suggest another")
+        }
+        suggestion?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.titleMedium,
+                fontFamily = FontFamily.Monospace,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                "Six random words: strong, and easier to remember than it looks. " +
+                    "Type it above if you want to use it.",
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+            )
+        }
         Spacer(Modifier.height(12.dp))
         PasswordField(
             value = confirm,

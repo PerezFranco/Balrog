@@ -2,6 +2,7 @@ package com.perezfranco.balrog.crypto
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
@@ -22,12 +23,21 @@ import javax.crypto.spec.SecretKeySpec
  *
  *  - wrapped by a Key Encryption Key derived from the master password
  *    (PBKDF2), and, optionally,
- *  - wrapped by a hardware-backed Android Keystore key that requires
- *    biometric authentication for every use.
+ *  - wrapped by a hardware-backed Android Keystore key that is released by
+ *    a biometric prompt (see [BiometricMode]).
  *
  * Unwrapping with the wrong password fails GCM authentication, which doubles
  * as master-password verification — no password hash is ever stored.
  */
+/** How biometric unlock is secured; see the notes in [VaultKeyManager]. */
+enum class BiometricMode {
+    /** Class 3 biometrics only; the Keystore key is hardware-gated on the match. */
+    STRONG,
+
+    /** Any enrolled biometric, including Class 2 face unlock; app-enforced. */
+    ANY,
+}
+
 class VaultKeyManager(context: Context) {
 
     private val prefs: SharedPreferences =
@@ -83,40 +93,68 @@ class VaultKeyManager(context: Context) {
     }
 
     // ---- Biometric unlock ----------------------------------------------------
+    //
+    // Two modes, chosen by the user in Settings:
+    //
+    //  STRONG  The Keystore key can only be used after a Class 3 ("strong")
+    //          biometric match, enforced in secure hardware: the prompt hands
+    //          back a cipher that is authorized for exactly one operation.
+    //
+    //  ANY     Also accepts Class 2 ("weak") biometrics — which is what face
+    //          unlock is on most phones. Android refuses to bind Keystore keys
+    //          to those, so the key is device-bound but not biometric-gated;
+    //          the prompt is enforced by the app rather than by hardware.
+
+    /** The active biometric mode, or null if biometric unlock is off. */
+    fun biometricMode(): BiometricMode? {
+        if (!isBiometricEnabled()) return null
+        return when (prefs.getString(KEY_BIOMETRIC_MODE, null)) {
+            BiometricMode.ANY.name -> BiometricMode.ANY
+            else -> BiometricMode.STRONG // vaults enrolled before modes existed
+        }
+    }
 
     /**
-     * Returns a cipher ready to wrap the DEK, to be authorized through a
-     * BiometricPrompt CryptoObject. Generates the Keystore key if needed.
+     * STRONG mode, step 1: returns a cipher ready to wrap the DEK, to be
+     * authorized through a BiometricPrompt CryptoObject. Always starts from a
+     * fresh Keystore key so a previously invalidated one can't get in the way.
      */
     fun prepareBiometricEnrollCipher(): Cipher {
-        val keystoreKey = getOrCreateKeystoreKey()
+        deleteKeystoreKey()
+        val keystoreKey = createKeystoreKey(BiometricMode.STRONG)
         return Cipher.getInstance(AES_GCM).apply {
             init(Cipher.ENCRYPT_MODE, keystoreKey)
         }
     }
 
-    /** Completes biometric enrollment with the cipher authorized by the prompt. */
+    /** STRONG mode, step 2: wraps the DEK with the cipher the prompt authorized. */
     fun finishBiometricEnroll(authorizedCipher: Cipher, dek: SecretKey) {
-        val wrapped = authorizedCipher.doFinal(dek.encoded)
-        prefs.edit()
-            .putString(KEY_BIOMETRIC_IV, encode(authorizedCipher.iv))
-            .putString(KEY_BIOMETRIC_WRAPPED_DEK, encode(wrapped))
-            .apply()
+        storeBiometricWrap(authorizedCipher, dek, BiometricMode.STRONG)
     }
 
     /**
-     * Returns a cipher ready to unwrap the DEK via BiometricPrompt, or null if
-     * biometrics are not enrolled or the Keystore key was invalidated (e.g. a
-     * new fingerprint was added on the device).
+     * ANY mode: wraps the DEK under a device-bound key. Call only after the
+     * user has passed a biometric prompt.
+     */
+    fun enrollAnyBiometric(dek: SecretKey) {
+        deleteKeystoreKey()
+        val keystoreKey = createKeystoreKey(BiometricMode.ANY)
+        val cipher = Cipher.getInstance(AES_GCM).apply {
+            init(Cipher.ENCRYPT_MODE, keystoreKey)
+        }
+        storeBiometricWrap(cipher, dek, BiometricMode.ANY)
+    }
+
+    /**
+     * STRONG mode: returns a cipher ready to unwrap the DEK via BiometricPrompt,
+     * or null if the Keystore key is gone or was invalidated (e.g. a new
+     * fingerprint was added on the device) — in which case biometric unlock is
+     * switched off until the user re-enables it.
      */
     fun prepareBiometricUnlockCipher(): Cipher? {
-        if (!isBiometricEnabled()) return null
-        val iv = decode(prefs.getString(KEY_BIOMETRIC_IV, null) ?: return null)
+        if (biometricMode() != BiometricMode.STRONG) return null
         return try {
-            val keystoreKey = loadKeystoreKey() ?: return null
-            Cipher.getInstance(AES_GCM).apply {
-                init(Cipher.DECRYPT_MODE, keystoreKey, GCMParameterSpec(128, iv))
-            }
+            unlockCipher()
         } catch (e: KeyPermanentlyInvalidatedException) {
             disableBiometric()
             null
@@ -125,11 +163,44 @@ class VaultKeyManager(context: Context) {
         }
     }
 
-    /** Completes biometric unlock with the cipher authorized by the prompt. */
-    fun finishBiometricUnlock(authorizedCipher: Cipher): SecretKey? {
+    /** STRONG mode: completes unlock with the cipher authorized by the prompt. */
+    fun finishBiometricUnlock(authorizedCipher: Cipher): SecretKey? =
+        unwrapBiometricDek(authorizedCipher)
+
+    /**
+     * ANY mode: unwraps the DEK. Call only after the user has passed a
+     * biometric prompt.
+     */
+    fun unlockWithAnyBiometric(): SecretKey? {
+        if (biometricMode() != BiometricMode.ANY) return null
+        return try {
+            unlockCipher()?.let(::unwrapBiometricDek)
+        } catch (e: GeneralSecurityException) {
+            null
+        }
+    }
+
+    private fun unlockCipher(): Cipher? {
+        val iv = decode(prefs.getString(KEY_BIOMETRIC_IV, null) ?: return null)
+        val keystoreKey = loadKeystoreKey() ?: return null
+        return Cipher.getInstance(AES_GCM).apply {
+            init(Cipher.DECRYPT_MODE, keystoreKey, GCMParameterSpec(128, iv))
+        }
+    }
+
+    private fun storeBiometricWrap(cipher: Cipher, dek: SecretKey, mode: BiometricMode) {
+        val wrapped = cipher.doFinal(dek.encoded)
+        prefs.edit()
+            .putString(KEY_BIOMETRIC_IV, encode(cipher.iv))
+            .putString(KEY_BIOMETRIC_WRAPPED_DEK, encode(wrapped))
+            .putString(KEY_BIOMETRIC_MODE, mode.name)
+            .apply()
+    }
+
+    private fun unwrapBiometricDek(cipher: Cipher): SecretKey? {
         val wrapped = decode(prefs.getString(KEY_BIOMETRIC_WRAPPED_DEK, null) ?: return null)
         return try {
-            val dekBytes = authorizedCipher.doFinal(wrapped)
+            val dekBytes = cipher.doFinal(wrapped)
             SecretKeySpec(dekBytes, "AES").also { dekBytes.fill(0) }
         } catch (e: GeneralSecurityException) {
             null
@@ -146,7 +217,12 @@ class VaultKeyManager(context: Context) {
         prefs.edit()
             .remove(KEY_BIOMETRIC_IV)
             .remove(KEY_BIOMETRIC_WRAPPED_DEK)
+            .remove(KEY_BIOMETRIC_MODE)
             .apply()
+        deleteKeystoreKey()
+    }
+
+    private fun deleteKeystoreKey() {
         try {
             KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
                 .deleteEntry(KEYSTORE_ALIAS)
@@ -154,8 +230,7 @@ class VaultKeyManager(context: Context) {
         }
     }
 
-    private fun getOrCreateKeystoreKey(): SecretKey {
-        loadKeystoreKey()?.let { return it }
+    private fun createKeystoreKey(mode: BiometricMode): SecretKey {
         val generator = KeyGenerator.getInstance(
             KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE
         )
@@ -166,15 +241,26 @@ class VaultKeyManager(context: Context) {
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(256)
-            .setUserAuthenticationRequired(true)
-            .setInvalidatedByBiometricEnrollment(true)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            builder.setUserAuthenticationParameters(
-                0, KeyProperties.AUTH_BIOMETRIC_STRONG
-            )
-        } else {
-            @Suppress("DEPRECATION")
-            builder.setUserAuthenticationValidityDurationSeconds(-1)
+        when (mode) {
+            BiometricMode.STRONG -> {
+                builder.setUserAuthenticationRequired(true)
+                    .setInvalidatedByBiometricEnrollment(true)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    builder.setUserAuthenticationParameters(
+                        0, KeyProperties.AUTH_BIOMETRIC_STRONG
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    builder.setUserAuthenticationValidityDurationSeconds(-1)
+                }
+            }
+            BiometricMode.ANY -> {
+                // Can't be biometric-gated (see above); at least refuse to
+                // work while the phone itself is locked.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    builder.setUnlockedDeviceRequired(true)
+                }
+            }
         }
         generator.init(builder.build())
         return generator.generateKey()
@@ -198,6 +284,7 @@ class VaultKeyManager(context: Context) {
         const val KEY_WRAPPED_DEK = "wrapped_dek"
         const val KEY_BIOMETRIC_IV = "biometric_iv"
         const val KEY_BIOMETRIC_WRAPPED_DEK = "biometric_wrapped_dek"
+        const val KEY_BIOMETRIC_MODE = "biometric_mode"
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val KEYSTORE_ALIAS = "balrog_biometric_dek_wrapper"
         const val AES_GCM = "AES/GCM/NoPadding"

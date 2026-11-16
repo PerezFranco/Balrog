@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import com.perezfranco.balrog.security.BiometricHelper
+import com.perezfranco.balrog.security.BiometricUnlock
 import com.perezfranco.balrog.security.SessionManager
 import com.perezfranco.balrog.ui.VaultViewModel
 
@@ -39,29 +41,18 @@ fun UnlockScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var working by remember { mutableStateOf(false) }
 
+    val capability = remember { BiometricHelper.capability(activity) }
     val biometricAvailable = remember {
-        viewModel.keyManager.isBiometricEnabled() &&
-            BiometricHelper.canUseBiometrics(activity)
+        viewModel.keyManager.biometricMode()?.let(capability::supports) == true
     }
 
     fun tryBiometric() {
-        val cipher = viewModel.keyManager.prepareBiometricUnlockCipher() ?: run {
-            error = "Biometric unlock unavailable — use your master password"
-            return
-        }
-        BiometricHelper.authenticate(
+        BiometricUnlock.unlock(
             activity = activity,
-            title = "Unlock Balrog",
-            subtitle = "Confirm your identity to open the vault",
-            cipher = cipher,
-            onSuccess = { authorized ->
-                val dek = viewModel.keyManager.finishBiometricUnlock(authorized)
-                if (dek != null) {
-                    SessionManager.unlock(dek)
-                    onUnlocked()
-                } else {
-                    error = "Biometric unlock failed — use your master password"
-                }
+            keyManager = viewModel.keyManager,
+            onUnlocked = { dek ->
+                SessionManager.unlock(dek)
+                onUnlocked()
             },
             onFailure = { message -> if (message != null) error = message },
         )
@@ -118,9 +109,13 @@ fun UnlockScreen(
                 onClick = { tryBiometric() },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(Icons.Filled.Fingerprint, contentDescription = null)
+                Icon(
+                    if (capability.hasFaceSensor && !capability.hasFingerprintSensor)
+                        Icons.Filled.Face else Icons.Filled.Fingerprint,
+                    contentDescription = null,
+                )
                 Spacer(Modifier.width(8.dp))
-                Text("Unlock with biometrics")
+                Text("Unlock with ${capability.label}")
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.perezfranco.balrog.ui.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,8 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,7 +40,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.perezfranco.balrog.data.PasswordEntry
 import com.perezfranco.balrog.security.ClipboardHelper
+import com.perezfranco.balrog.security.PassphraseGenerator
 import com.perezfranco.balrog.security.PasswordGenerator
+import com.perezfranco.balrog.security.WordList
 import com.perezfranco.balrog.ui.VaultViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +59,8 @@ fun PasswordEditorScreen(
     var password by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    var totp by remember { mutableStateOf("") }
+    var generateMenuOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(itemId) {
@@ -64,6 +71,7 @@ fun PasswordEditorScreen(
                 password = it.password
                 url = it.url
                 notes = it.notes
+                totp = it.totp
             }
             loaded = true
         }
@@ -133,12 +141,47 @@ fun PasswordEditorScreen(
                     Text("Copy")
                 }
                 Spacer(Modifier.width(8.dp))
-                OutlinedButton(onClick = { password = PasswordGenerator.generate(20) }) {
-                    Icon(Icons.Filled.Casino, contentDescription = null)
-                    Spacer(Modifier.width(6.dp))
-                    Text("Generate")
+                Box {
+                    OutlinedButton(onClick = { generateMenuOpen = true }) {
+                        Icon(Icons.Filled.Casino, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Generate")
+                    }
+                    DropdownMenu(
+                        expanded = generateMenuOpen,
+                        onDismissRequest = { generateMenuOpen = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Random password") },
+                            onClick = {
+                                generateMenuOpen = false
+                                password = PasswordGenerator.generate(20)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Passphrase") },
+                            onClick = {
+                                generateMenuOpen = false
+                                password = PassphraseGenerator.generate(
+                                    WordList.load(context), capitalize = true,
+                                )
+                            },
+                        )
+                    }
                 }
             }
+            Spacer(Modifier.height(16.dp))
+            TotpSection(
+                totp = totp,
+                onConfigured = { config ->
+                    totp = config.toUri()
+                    // A scanned code knows who it is for; use that if we don't.
+                    if (title.isBlank()) title = config.issuer
+                    if (username.isBlank()) username = config.account
+                },
+                onRemoved = { totp = "" },
+            )
+            Spacer(Modifier.height(4.dp))
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = url,
@@ -166,10 +209,12 @@ fun PasswordEditorScreen(
                             password = password,
                             url = url,
                             notes = notes,
+                            totp = totp,
                         )
                     ) { onBack() }
                 },
-                enabled = loaded && (title.isNotBlank() || password.isNotBlank()),
+                enabled = loaded &&
+                    (title.isNotBlank() || password.isNotBlank() || totp.isNotEmpty()),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Save")

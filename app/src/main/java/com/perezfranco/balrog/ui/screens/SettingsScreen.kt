@@ -33,7 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import com.perezfranco.balrog.crypto.BiometricMode
 import com.perezfranco.balrog.security.BiometricHelper
+import com.perezfranco.balrog.security.BiometricUnlock
 import com.perezfranco.balrog.security.SessionManager
 import com.perezfranco.balrog.ui.VaultViewModel
 
@@ -45,35 +47,30 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onVaultDestroyed: () -> Unit,
 ) {
-    var biometricEnabled by remember {
-        mutableStateOf(viewModel.keyManager.isBiometricEnabled())
-    }
+    val keyManager = viewModel.keyManager
+    var biometricMode by remember { mutableStateOf(keyManager.biometricMode()) }
     var biometricError by remember { mutableStateOf<String?>(null) }
-    val biometricSupported = remember { BiometricHelper.canUseBiometrics(activity) }
+    val capability = remember { BiometricHelper.capability(activity) }
+    // Asked before weaker biometrics are accepted, since it is a real trade-off.
+    var confirmAnyMode by remember { mutableStateOf(false) }
 
     var showChangePassword by remember { mutableStateOf(false) }
     var showDestroy by remember { mutableStateOf(false) }
 
-    fun enableBiometric() {
-        val cipher = try {
-            viewModel.keyManager.prepareBiometricEnrollCipher()
-        } catch (e: Exception) {
-            biometricError = "Could not prepare biometric key"
-            return
-        }
-        BiometricHelper.authenticate(
+    fun enableBiometric(mode: BiometricMode) {
+        BiometricUnlock.enroll(
             activity = activity,
-            title = "Enable biometric unlock",
-            subtitle = "Confirm your identity to protect the vault key",
-            cipher = cipher,
-            onSuccess = { authorized ->
-                viewModel.keyManager.finishBiometricEnroll(
-                    authorized, SessionManager.requireKey()
-                )
-                biometricEnabled = true
+            keyManager = keyManager,
+            mode = mode,
+            dek = SessionManager.requireKey(),
+            onEnrolled = {
+                biometricMode = keyManager.biometricMode()
                 biometricError = null
             },
-            onFailure = { message -> if (message != null) biometricError = message },
+            onFailure = { message ->
+                biometricMode = keyManager.biometricMode()
+                if (message != null) biometricError = message
+            },
         )
     }
 
@@ -105,25 +102,56 @@ fun SettingsScreen(
                 Column(Modifier.weight(1f)) {
                     Text("Biometric unlock")
                     Text(
-                        if (biometricSupported)
-                            "Open the vault with fingerprint or face"
-                        else
-                            "No strong biometrics available on this device",
+                        when {
+                            capability.any -> "Open the vault with ${capability.label}"
+                            capability.noneEnrolled ->
+                                "Add a fingerprint or face in Android settings first"
+                            else -> "No biometric hardware available on this device"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
                 Switch(
-                    checked = biometricEnabled,
-                    enabled = biometricSupported,
+                    checked = biometricMode != null,
+                    enabled = capability.any || biometricMode != null,
                     onCheckedChange = { wanted ->
-                        if (wanted) {
-                            enableBiometric()
-                        } else {
-                            viewModel.keyManager.disableBiometric()
-                            biometricEnabled = false
+                        when {
+                            !wanted -> {
+                                keyManager.disableBiometric()
+                                biometricMode = null
+                            }
+                            capability.strong -> enableBiometric(BiometricMode.STRONG)
+                            // Only a weaker biometric (typically face) is enrolled.
+                            else -> confirmAnyMode = true
                         }
                     },
                 )
+            }
+            if (capability.any) {
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Allow weaker biometrics")
+                        Text(
+                            "Needed for face unlock on most phones, where Android " +
+                                "rates face recognition below \"strong\". Off: only " +
+                                "strong biometrics, enforced by secure hardware.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Switch(
+                        checked = biometricMode == BiometricMode.ANY,
+                        // Without a strong biometric there is nothing to fall back to.
+                        enabled = biometricMode != BiometricMode.ANY || capability.strong,
+                        onCheckedChange = { wanted ->
+                            if (wanted) confirmAnyMode = true
+                            else enableBiometric(BiometricMode.STRONG)
+                        },
+                    )
+                }
             }
             biometricError?.let {
                 Text(
@@ -156,6 +184,32 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+
+    if (confirmAnyMode) {
+        AlertDialog(
+            onDismissRequest = { confirmAnyMode = false },
+            title = { Text("Allow weaker biometrics?") },
+            text = {
+                Text(
+                    "Balrog will accept any fingerprint or face enrolled on this " +
+                        "device, including face unlock that Android considers easier " +
+                        "to fool.\n\nIn this mode the vault key is protected by the " +
+                        "device instead of being released by the biometric match " +
+                        "itself, and anyone who can add their own face or fingerprint " +
+                        "to this phone could open the vault."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmAnyMode = false
+                    enableBiometric(BiometricMode.ANY)
+                }) { Text("Allow") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmAnyMode = false }) { Text("Cancel") }
+            },
+        )
     }
 
     if (showChangePassword) {

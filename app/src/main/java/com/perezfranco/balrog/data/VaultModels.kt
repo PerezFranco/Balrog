@@ -21,6 +21,8 @@ data class PasswordEntry(
     val password: String = "",
     val url: String = "",
     val notes: String = "",
+    /** Two-factor setup as an `otpauth://totp/…` URI, or empty if none. */
+    val totp: String = "",
     override val createdAt: Long = 0,
     override val updatedAt: Long = 0,
 ) : VaultItem {
@@ -30,6 +32,7 @@ data class PasswordEntry(
         .put("password", password)
         .put("url", url)
         .put("notes", notes)
+        .put("totp", totp)
         .toString()
 
     companion object {
@@ -42,6 +45,7 @@ data class PasswordEntry(
                 password = obj.optString("password"),
                 url = obj.optString("url"),
                 notes = obj.optString("notes"),
+                totp = obj.optString("totp"),
                 createdAt = entity.createdAt,
                 updatedAt = entity.updatedAt,
             )
