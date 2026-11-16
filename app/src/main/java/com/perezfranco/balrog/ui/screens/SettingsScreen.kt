@@ -1,6 +1,8 @@
 package com.perezfranco.balrog.ui.screens
 
 import android.net.Uri
+import android.text.format.DateUtils
+import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.OutlinedButton
@@ -78,6 +80,16 @@ fun SettingsScreen(
                     BackupResult.WrongPassword -> null
                 }
             }
+        }
+    }
+    val autoBackup by viewModel.backupManager.status.collectAsState()
+    val autoBackupPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { destination ->
+        if (destination != null && !viewModel.backupManager.enableAutoBackup(destination)) {
+            backupFailed = true
+            backupMessage = "That location can't be used for automatic backups. " +
+                "Try another folder or app."
         }
     }
     val importPicker = rememberLauncherForActivityResult(
@@ -227,6 +239,48 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Import from a backup")
+            }
+            Spacer(Modifier.height(12.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Automatic backup")
+                    Text(
+                        if (autoBackup.enabled) {
+                            "Keeping \"${autoBackup.destinationName}\" up to date. " +
+                                if (autoBackup.lastSuccessAt > 0) {
+                                    "Last saved " + DateUtils.getRelativeTimeSpanString(
+                                        autoBackup.lastSuccessAt
+                                    ) + "."
+                                } else "Not saved yet."
+                        } else {
+                            "Keeps one backup file up to date every time the vault " +
+                                "changes. Pick a folder that syncs — Google Drive, " +
+                                "OneDrive — to have it leave the phone on its own."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    autoBackup.lastError?.let {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+                Switch(
+                    checked = autoBackup.enabled,
+                    onCheckedChange = { wanted ->
+                        backupMessage = null
+                        if (wanted) {
+                            autoBackupPicker.launch("balrog-backup.${VaultBackup.FILE_EXTENSION}")
+                        } else {
+                            viewModel.backupManager.disableAutoBackup()
+                        }
+                    },
+                )
             }
             backupMessage?.let {
                 Spacer(Modifier.height(4.dp))

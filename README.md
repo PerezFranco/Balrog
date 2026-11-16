@@ -20,6 +20,8 @@ fingerprint and face unlock, and two-factor codes built into each entry. *It sha
   (`plural-ecosystem-jogging-reoccupy-unclip`) from the EFF large wordlist
 - **Encrypted backups** — save the whole vault as one encrypted file, and
   restore it on a new phone or merge it into an existing vault
+- **Automatic backup to Drive, OneDrive, …** — pick a file location once and
+  Balrog keeps it up to date every time the vault changes
 - **Auto-lock** — the vault key is dropped after 60 s in the background
 - **Clipboard hygiene** — copies are flagged sensitive and cleared after 30 s
 - **Screenshot blocking** — `FLAG_SECURE` on every screen
@@ -86,6 +88,17 @@ sits on disk: the password-wrapped vault key with its KDF parameters, plus
 every record still encrypted. Nothing is decrypted to make it, so it is
 exactly as strong as your master password, and a seal over the full record
 set detects missing, reordered or altered entries.
+
+**Automatic backup** (Settings) asks once where to keep the file, then
+rewrites it whenever an item is added, edited or deleted, or the master
+password changes. Pick a location inside Google Drive, OneDrive or any other
+app that appears in Android's file picker and that app syncs the file to the
+cloud; Balrog itself still has no internet permission, no account and no
+tokens. The vault only changes while you are using it, so writing on change
+keeps the backup fresher than a timer would; a write that can't complete is
+retried the next time the vault is unlocked. It is one file, overwritten in
+place — deletions reach the backup too, so rely on the cloud service's
+version history (or an occasional manual backup) if you want older copies.
 
 - A backup opens with the master password **in use when it was made**, even
   if you change the password afterwards. Make a fresh backup after changing

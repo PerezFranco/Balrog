@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.perezfranco.balrog.backup.BackupManager
 import com.perezfranco.balrog.crypto.VaultKeyManager
 import com.perezfranco.balrog.data.VaultDatabase
 import com.perezfranco.balrog.data.VaultRepository
@@ -14,6 +15,10 @@ class BalrogApplication : Application() {
     val keyManager: VaultKeyManager by lazy { VaultKeyManager(this) }
     val repository: VaultRepository by lazy {
         VaultRepository(VaultDatabase.get(this).vaultDao())
+    }
+
+    val backupManager: BackupManager by lazy {
+        BackupManager(this, keyManager, repository)
     }
 
     override fun onCreate() {
