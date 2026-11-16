@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- Used only if the user turns on sync, and only to reach the address
+         they enter: the script on their own website. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Only for scanning two-factor setup QR codes; requested when first used. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />

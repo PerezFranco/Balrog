@@ -39,6 +39,7 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
     val context = LocalContext.current
     var suggestion by remember { mutableStateOf<String?>(null) }
 
+    var serverRestore by remember { mutableStateOf(false) }
     var restoreSource by remember { mutableStateOf<Uri?>(null) }
     val restorePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -118,6 +119,9 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
         TextButton(onClick = { restorePicker.launch(BACKUP_OPEN_TYPES) }, enabled = !working) {
             Text("Restore from a backup instead")
         }
+        TextButton(onClick = { serverRestore = true }, enabled = !working) {
+            Text("Restore from your sync server")
+        }
     }
 
     restoreSource?.let { source ->
@@ -127,6 +131,17 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
             onDismiss = { restoreSource = null },
             onRestored = { _, _ ->
                 restoreSource = null
+                onVaultCreated()
+            },
+        )
+    }
+
+    if (serverRestore) {
+        RestoreFromServerDialog(
+            viewModel = viewModel,
+            onDismiss = { serverRestore = false },
+            onRestored = {
+                serverRestore = false
                 onVaultCreated()
             },
         )

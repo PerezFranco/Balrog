@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -72,6 +73,69 @@ fun RestoreBackupDialog(
                             is BackupResult.Success -> onRestored(result.count, result.skipped)
                             BackupResult.WrongPassword ->
                                 error = "That password does not open this backup"
+                            is BackupResult.Failure -> error = result.message
+                        }
+                    }
+                },
+            ) { Text(if (working) "Restoring…" else "Restore") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !working) { Text("Cancel") }
+        },
+    )
+}
+
+/** Sets a fresh install up from the vault on the user's sync server. */
+@Composable
+fun RestoreFromServerDialog(
+    viewModel: VaultViewModel,
+    onDismiss: () -> Unit,
+    onRestored: () -> Unit,
+) {
+    var url by remember { mutableStateOf("") }
+    var token by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var working by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = { if (!working) onDismiss() },
+        title = { Text("Restore from sync server") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it; error = null },
+                    label = { Text("Address of balrog-sync.php") },
+                    singleLine = true,
+                )
+                Spacer(Modifier.height(8.dp))
+                PasswordField(
+                    value = token,
+                    onValueChange = { token = it; error = null },
+                    label = "Sync token",
+                )
+                Spacer(Modifier.height(8.dp))
+                PasswordField(
+                    value = password,
+                    onValueChange = { password = it; error = null },
+                    label = "Master password",
+                    isError = error != null,
+                    supportingText = error,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !working && url.isNotBlank() && token.isNotBlank() &&
+                    password.isNotEmpty(),
+                onClick = {
+                    working = true
+                    viewModel.restoreFromServer(url, token, password.toCharArray()) { result ->
+                        working = false
+                        when (result) {
+                            is BackupResult.Success -> onRestored()
+                            BackupResult.WrongPassword -> error = "Wrong master password"
                             is BackupResult.Failure -> error = result.message
                         }
                     }

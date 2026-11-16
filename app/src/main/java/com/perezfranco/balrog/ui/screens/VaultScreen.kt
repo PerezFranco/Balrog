@@ -5,6 +5,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import android.widget.Toast
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.platform.LocalContext
+import com.perezfranco.balrog.security.ClipboardHelper
+import com.perezfranco.balrog.security.Totp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -68,6 +74,14 @@ fun VaultScreen(
     // A selected folder that has since been emptied or renamed counts as "All".
     val activeFolder = selectedFolder?.takeIf { it.isEmpty() || it in folders }
     var renaming by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+
+    fun copy(what: String, value: String) {
+        ClipboardHelper.copySecret(context, what, value)
+        Toast.makeText(
+            context, what.replaceFirstChar { it.uppercaseChar() } + " copied", Toast.LENGTH_SHORT,
+        ).show()
+    }
 
     val passwords = items.filterIsInstance<PasswordEntry>()
     val notes = items.filterIsInstance<SecureNote>()
@@ -170,12 +184,39 @@ fun VaultScreen(
                                 leadingContent = {
                                     Icon(Icons.Filled.Key, contentDescription = null)
                                 },
+                                // One tap to copy, without opening the entry.
                                 trailingContent = {
-                                    if (entry.totp.isNotEmpty()) {
-                                        Icon(
-                                            Icons.Filled.Shield,
-                                            contentDescription = "Has two-factor code",
-                                        )
+                                    Row {
+                                        if (entry.totp.isNotEmpty()) {
+                                            IconButton(onClick = {
+                                                Totp.parseOrNull(entry.totp)?.let {
+                                                    copy("two-factor code", Totp.generate(it))
+                                                }
+                                            }) {
+                                                Icon(
+                                                    Icons.Filled.Shield,
+                                                    contentDescription = "Copy two-factor code",
+                                                )
+                                            }
+                                        }
+                                        if (entry.username.isNotEmpty()) {
+                                            IconButton(onClick = {
+                                                copy("username", entry.username)
+                                            }) {
+                                                Icon(
+                                                    Icons.Filled.Person,
+                                                    contentDescription = "Copy username",
+                                                )
+                                            }
+                                        }
+                                        IconButton(onClick = {
+                                            copy("password", entry.password)
+                                        }) {
+                                            Icon(
+                                                Icons.Filled.ContentCopy,
+                                                contentDescription = "Copy password",
+                                            )
+                                        }
                                     }
                                 },
                                 modifier = Modifier.clickable { onOpenPassword(entry.id) },

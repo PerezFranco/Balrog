@@ -70,7 +70,8 @@ jobs:
           else
             signing="Signed with a one-off key: to move to or from this release, save a backup in Settings, uninstall, install, then restore."
           fi
-          gh release create "$TAG" "Balrog-$TAG.apk" \
+          cp server/balrog-sync.php balrog-sync.php
+          gh release create "$TAG" "Balrog-$TAG.apk" balrog-sync.php \
             --target "$GITHUB_SHA" \
             --title "Balrog ${TAG#v}" \
             --notes "Download **Balrog-$TAG.apk** below and open it on your Android phone (Android 8.0 or newer). $signing"

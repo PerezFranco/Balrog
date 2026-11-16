@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import com.perezfranco.balrog.crypto.VaultBackup
 import com.perezfranco.balrog.ui.VaultViewModel.BackupResult
 import java.time.LocalDate
@@ -94,6 +95,10 @@ fun SettingsScreen(
                 "Try another folder or app."
         }
     }
+    val sync by viewModel.syncManager.status.collectAsState()
+    var syncUrl by remember { mutableStateOf("") }
+    var syncToken by remember { mutableStateOf("") }
+
     var importMessage by remember { mutableStateOf<String?>(null) }
     var importFailed by remember { mutableStateOf(false) }
     val bitwardenPicker = rememberLauncherForActivityResult(
@@ -362,6 +367,74 @@ fun SettingsScreen(
                     else MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodySmall,
                 )
+            }
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(24.dp))
+            Text("Sync", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            if (sync.enabled) {
+                Text(sync.url, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    when {
+                        sync.syncing -> "Syncing…"
+                        sync.lastSuccessAt > 0 -> "In sync as of " +
+                            DateUtils.getRelativeTimeSpanString(sync.lastSuccessAt) + "."
+                        else -> "Not synced yet."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                sync.lastError?.let {
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                Row {
+                    Button(onClick = { viewModel.syncManager.syncNow() }, enabled = !sync.syncing) {
+                        Text("Sync now")
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedButton(onClick = { viewModel.syncManager.disable() }) {
+                        Text("Turn off")
+                    }
+                }
+            } else {
+                Text(
+                    "Keeps this vault in step with a copy on your own website, so " +
+                        "you can also use it from a computer. Only the encrypted " +
+                        "vault leaves the phone. Upload balrog-sync.php to your site " +
+                        "first, then enter its address and the token you set in it.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = syncUrl,
+                    onValueChange = { syncUrl = it },
+                    label = { Text("Address of balrog-sync.php") },
+                    placeholder = { Text("https://example.com/balrog/balrog-sync.php") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                PasswordField(
+                    value = syncToken,
+                    onValueChange = { syncToken = it },
+                    label = "Sync token",
+                )
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        viewModel.syncManager.enable(syncUrl, syncToken)
+                        syncToken = ""
+                    },
+                    enabled = syncUrl.trim().startsWith("https://") && syncToken.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Turn on sync")
+                }
             }
             Spacer(Modifier.height(24.dp))
             HorizontalDivider()
