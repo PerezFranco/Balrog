@@ -64,5 +64,7 @@ dependencies {
     implementation(libs.google.material)
     implementation(libs.zxing.android.embedded)
     testImplementation(libs.junit)
+    // The android.jar org.json classes are stubs; this makes them real in unit tests.
+    testImplementation(libs.org.json)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

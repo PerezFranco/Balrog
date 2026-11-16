@@ -92,6 +92,32 @@ class VaultKeyManager(context: Context) {
         return true
     }
 
+    // ---- Backup ----------------------------------------------------------------
+
+    /** The password-wrapped vault key and its KDF parameters, for a backup file. */
+    fun exportKeyMaterial(): VaultBackup.KeyMaterial? {
+        val salt = prefs.getString(KEY_SALT, null) ?: return null
+        val wrapped = prefs.getString(KEY_WRAPPED_DEK, null) ?: return null
+        return VaultBackup.KeyMaterial(
+            salt = decode(salt),
+            iterations = prefs.getInt(KEY_ITERATIONS, CryptoEngine.KDF_ITERATIONS),
+            wrappedDek = decode(wrapped),
+        )
+    }
+
+    /**
+     * Sets this device's vault up from a backup's key material, so the vault
+     * opens with the master password the backup was made under.
+     */
+    fun adoptVault(material: VaultBackup.KeyMaterial) {
+        check(!vaultExists()) { "Vault already exists" }
+        prefs.edit()
+            .putString(KEY_SALT, encode(material.salt))
+            .putInt(KEY_ITERATIONS, material.iterations)
+            .putString(KEY_WRAPPED_DEK, encode(material.wrappedDek))
+            .apply()
+    }
+
     // ---- Biometric unlock ----------------------------------------------------
     //
     // Two modes, chosen by the user in Settings:

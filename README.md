@@ -18,11 +18,14 @@ fingerprint and face unlock, and two-factor codes built into each entry. *It sha
 - **Password and passphrase generator** — cryptographically secure random
   strings with configurable character classes, or diceware-style passphrases
   (`plural-ecosystem-jogging-reoccupy-unclip`) from the EFF large wordlist
+- **Encrypted backups** — save the whole vault as one encrypted file, and
+  restore it on a new phone or merge it into an existing vault
 - **Auto-lock** — the vault key is dropped after 60 s in the background
 - **Clipboard hygiene** — copies are flagged sensitive and cleared after 30 s
 - **Screenshot blocking** — `FLAG_SECURE` on every screen
-- **No backups, no network** — cloud backup and device transfer are excluded;
-  the app requests no internet permission. The camera permission is asked for
+- **No cloud, no network** — Android cloud backup and device transfer are
+  excluded, and the app requests no internet permission; backups go only
+  where you put them. The camera permission is asked for
   only when you first scan a two-factor QR code.
 
 ## Security design
@@ -75,6 +78,25 @@ second factor in the same vault is convenient but means the vault is a single
 point of compromise for that account — for your most critical accounts you may
 prefer a separate device.
 
+### Backups
+
+Settings → **Save a backup** writes a `.balrog` file wherever you choose
+(Downloads, a USB stick, your own cloud folder). The file is the vault as it
+sits on disk: the password-wrapped vault key with its KDF parameters, plus
+every record still encrypted. Nothing is decrypted to make it, so it is
+exactly as strong as your master password, and a seal over the full record
+set detects missing, reordered or altered entries.
+
+- A backup opens with the master password **in use when it was made**, even
+  if you change the password afterwards. Make a fresh backup after changing
+  it, and delete old ones you no longer want openable with the old password.
+- On a new install, choose **Restore from a backup instead** on the first
+  screen; the vault comes back with that master password.
+- **Import from a backup** in Settings merges a backup into the current
+  vault, skipping items that are already there.
+- Biometric unlock is tied to the device and is not part of a backup; turn it
+  on again after restoring.
+
 ### Passphrases
 
 Words are drawn uniformly with `SecureRandom` from the 7,776-word EFF large
@@ -93,7 +115,7 @@ Requires Android Studio (or the Android SDK + JDK 17). Then:
 - minSdk 26 (Android 8.0), targetSdk 34
 - Kotlin 2.0, Jetpack Compose (Material 3), Room, AndroidX Biometric
 
-Run the unit tests (crypto core, two-factor codes, generators) with:
+Run the unit tests (crypto core, backups, two-factor codes, generators) with:
 
 ```sh
 ./gradlew test
@@ -107,7 +129,8 @@ debug APK to the run.
 Balrog protects data at rest against device theft and casual extraction. It
 does not defend against a compromised OS, a rooted device with a debugger
 attached while the vault is unlocked, or someone who knows your master
-password. Choose a long master password; there is deliberately no recovery.
+password. Choose a long master password; there is deliberately no recovery — a backup
+is only as good as your memory of the password it was made under.
 
 ## License
 

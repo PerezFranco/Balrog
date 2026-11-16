@@ -1,5 +1,8 @@
 package com.perezfranco.balrog.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -35,6 +38,11 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
     var working by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var suggestion by remember { mutableStateOf<String?>(null) }
+
+    var restoreSource by remember { mutableStateOf<Uri?>(null) }
+    val restorePicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { source -> if (source != null) restoreSource = source }
 
     val tooShort = password.isNotEmpty() && password.length < MIN_MASTER_PASSWORD_LENGTH
     val mismatch = confirm.isNotEmpty() && confirm != password
@@ -106,5 +114,21 @@ fun SetupScreen(viewModel: VaultViewModel, onVaultCreated: () -> Unit) {
         ) {
             Text(if (working) "Creating vault…" else "Create vault")
         }
+        Spacer(Modifier.height(8.dp))
+        TextButton(onClick = { restorePicker.launch(BACKUP_OPEN_TYPES) }, enabled = !working) {
+            Text("Restore from a backup instead")
+        }
+    }
+
+    restoreSource?.let { source ->
+        RestoreBackupDialog(
+            viewModel = viewModel,
+            source = source,
+            onDismiss = { restoreSource = null },
+            onRestored = { _, _ ->
+                restoreSource = null
+                onVaultCreated()
+            },
+        )
     }
 }

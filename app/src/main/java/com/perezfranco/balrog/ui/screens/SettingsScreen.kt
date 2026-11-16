@@ -1,5 +1,12 @@
 package com.perezfranco.balrog.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.OutlinedButton
+import com.perezfranco.balrog.crypto.VaultBackup
+import com.perezfranco.balrog.ui.VaultViewModel.BackupResult
+import java.time.LocalDate
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,6 +60,29 @@ fun SettingsScreen(
     val capability = remember { BiometricHelper.capability(activity) }
     // Asked before weaker biometrics are accepted, since it is a real trade-off.
     var confirmAnyMode by remember { mutableStateOf(false) }
+
+    // Backup: file pickers hand back a location; the work happens after.
+    var backupMessage by remember { mutableStateOf<String?>(null) }
+    var backupFailed by remember { mutableStateOf(false) }
+    var restoreSource by remember { mutableStateOf<Uri?>(null) }
+    val exportPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { destination ->
+        if (destination != null) {
+            viewModel.exportBackup(destination) { result ->
+                backupFailed = result !is BackupResult.Success
+                backupMessage = when (result) {
+                    is BackupResult.Success ->
+                        "Backup saved (${result.count} ${plural(result.count, "item")})."
+                    is BackupResult.Failure -> result.message
+                    BackupResult.WrongPassword -> null
+                }
+            }
+        }
+    }
+    val importPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { source -> if (source != null) restoreSource = source }
 
     var showChangePassword by remember { mutableStateOf(false) }
     var showDestroy by remember { mutableStateOf(false) }
@@ -167,6 +197,49 @@ fun SettingsScreen(
             Spacer(Modifier.height(24.dp))
             HorizontalDivider()
             Spacer(Modifier.height(24.dp))
+            Text("Backup", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "A backup is one encrypted file holding everything in the vault. " +
+                    "Keep it somewhere other than this phone. It opens only with " +
+                    "the master password you have today — even if you change " +
+                    "the password later.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    backupMessage = null
+                    exportPicker.launch(
+                        "balrog-backup-${LocalDate.now()}.${VaultBackup.FILE_EXTENSION}"
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Save a backup")
+            }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = {
+                    backupMessage = null
+                    importPicker.launch(BACKUP_OPEN_TYPES)
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Import from a backup")
+            }
+            backupMessage?.let {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    it,
+                    color = if (backupFailed) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(24.dp))
             Text("Danger zone", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
             Button(
@@ -212,6 +285,20 @@ fun SettingsScreen(
         )
     }
 
+    restoreSource?.let { source ->
+        RestoreBackupDialog(
+            viewModel = viewModel,
+            source = source,
+            onDismiss = { restoreSource = null },
+            onRestored = { imported, skipped ->
+                restoreSource = null
+                backupFailed = false
+                backupMessage = "Imported $imported ${plural(imported, "item")}" +
+                    if (skipped > 0) ", skipped $skipped already in the vault." else "."
+            },
+        )
+    }
+
     if (showChangePassword) {
         ChangePasswordDialog(
             viewModel = viewModel,
@@ -241,6 +328,8 @@ fun SettingsScreen(
         )
     }
 }
+
+private fun plural(count: Int, noun: String) = if (count == 1) noun else noun + "s"
 
 @Composable
 private fun ChangePasswordDialog(

@@ -1,15 +1,20 @@
 package com.perezfranco.balrog.data
 
 import com.perezfranco.balrog.crypto.CryptoEngine
+import com.perezfranco.balrog.crypto.VaultBackup
 import com.perezfranco.balrog.security.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.security.GeneralSecurityException
+import javax.crypto.SecretKey
 
 /**
  * Encrypts vault items on the way into Room and decrypts them on the way out,
  * using the session's in-memory vault key.
  */
+/** Outcome of [VaultRepository.importRecords]. */
+data class ImportSummary(val imported: Int, val skipped: Int)
+
 class VaultRepository(private val dao: VaultDao) {
 
     /** All items, decrypted. Records that fail authentication are dropped. */
@@ -47,6 +52,55 @@ class VaultRepository(private val dao: VaultDao) {
     }
 
     suspend fun deleteAll() = dao.deleteAll()
+
+    // ---- Backup ----------------------------------------------------------------
+
+    /** Every record exactly as stored (still encrypted), for a backup file. */
+    suspend fun exportRecords(): List<VaultBackup.Record> =
+        dao.getAll().map { VaultBackup.Record(it.type, it.payload, it.createdAt, it.updatedAt) }
+
+    /**
+     * Adds a backup's records to the vault, re-encrypting them from
+     * [backupKey] to the session key. Items identical to ones already in the
+     * vault are skipped, so importing the same backup twice is harmless.
+     */
+    suspend fun importRecords(
+        records: List<VaultBackup.Record>,
+        backupKey: SecretKey,
+    ): ImportSummary {
+        val sessionKey = SessionManager.requireKey()
+        val known = ItemType.entries.map { it.name }
+        val present = dao.getAll().mapNotNullTo(HashSet()) { entity ->
+            try {
+                entity.type to CryptoEngine.decrypt(sessionKey, entity.payload).decodeToString()
+            } catch (e: GeneralSecurityException) {
+                null
+            }
+        }
+        var imported = 0
+        var skipped = 0
+        for (record in records) {
+            if (record.type !in known) {
+                skipped++
+                continue
+            }
+            val json = CryptoEngine.decrypt(backupKey, record.payload)
+            if (!present.add(record.type to json.decodeToString())) {
+                skipped++
+                continue
+            }
+            dao.insert(
+                VaultItemEntity(
+                    type = record.type,
+                    payload = CryptoEngine.encrypt(sessionKey, json),
+                    createdAt = record.createdAt,
+                    updatedAt = record.updatedAt,
+                )
+            )
+            imported++
+        }
+        return ImportSummary(imported, skipped)
+    }
 
     private fun encrypt(json: String): ByteArray =
         CryptoEngine.encrypt(SessionManager.requireKey(), json.encodeToByteArray())
