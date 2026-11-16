@@ -43,6 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import com.perezfranco.balrog.crypto.BiometricMode
+import com.perezfranco.balrog.crypto.SecondFactor
+import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.layout.width
 import com.perezfranco.balrog.security.BiometricHelper
 import com.perezfranco.balrog.security.BiometricUnlock
 import com.perezfranco.balrog.ui.VaultViewModel
@@ -121,19 +124,19 @@ fun SettingsScreen(
     var showChangePassword by remember { mutableStateOf(false) }
     var showDestroy by remember { mutableStateOf(false) }
 
-    var pinRequired by remember { mutableStateOf(keyManager.biometricRequiresPin()) }
-    // Set while the user is choosing a PIN; holds the mode to enroll afterwards.
-    var choosePinFor by remember { mutableStateOf<BiometricMode?>(null) }
+    var secondFactor by remember { mutableStateOf(keyManager.biometricSecondFactor()) }
+    // Set while the user is choosing a PIN or pattern: the enrollment to do after.
+    var choosing by remember { mutableStateOf<Pair<BiometricMode, SecondFactor>?>(null) }
 
     fun refreshBiometricState() {
         biometricMode = keyManager.biometricMode()
-        pinRequired = keyManager.biometricRequiresPin()
+        secondFactor = keyManager.biometricSecondFactor()
     }
 
     // Every change to biometric settings is a fresh enrollment: a new key,
     // and a biometric prompt to confirm it is really the owner asking.
-    fun enroll(mode: BiometricMode, pin: CharArray?) {
-        viewModel.prepareBiometricPayload(pin) { payload ->
+    fun enroll(mode: BiometricMode, factor: SecondFactor?, secret: CharArray?) {
+        viewModel.prepareBiometricPayload(factor, secret) { payload ->
             BiometricUnlock.enroll(
                 activity = activity,
                 keyManager = keyManager,
@@ -151,9 +154,9 @@ fun SettingsScreen(
         }
     }
 
-    /** Enrolls in [mode], first asking for a PIN if one is (to be) required. */
-    fun enableBiometric(mode: BiometricMode, withPin: Boolean = pinRequired) {
-        if (withPin) choosePinFor = mode else enroll(mode, null)
+    /** Enrolls in [mode], first asking for the PIN or pattern if [factor] needs one. */
+    fun enableBiometric(mode: BiometricMode, factor: SecondFactor? = secondFactor) {
+        if (factor != null) choosing = mode to factor else enroll(mode, null, null)
     }
 
     Scaffold(
@@ -235,27 +238,33 @@ fun SettingsScreen(
                     )
                 }
             }
-            if (biometricMode != null) {
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Also require a PIN")
-                        Text(
-                            "Unlock with ${capability.label} and then a PIN. " +
-                                "Protects the vault if someone gets hold of your " +
-                                "finger or face — or a copy of them.",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                    Switch(
-                        checked = pinRequired,
-                        onCheckedChange = { wanted ->
-                            biometricMode?.let { enableBiometric(it, withPin = wanted) }
-                        },
-                    )
+            biometricMode?.let { mode ->
+                Spacer(Modifier.height(12.dp))
+                Text("Second step")
+                Text(
+                    "Ask for a PIN or a pattern after your ${capability.label}. " +
+                        "Protects the vault if someone gets hold of your finger " +
+                        "or face — or a copy of them.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Row {
+                    listOf(
+                        null to "None",
+                        SecondFactor.PIN to "PIN",
+                        SecondFactor.PATTERN to "Pattern",
+                    ).forEach { (factor, name) ->
+                            FilterChip(
+                                selected = secondFactor == factor,
+                                // Tapping the current PIN/pattern lets you change it.
+                                onClick = {
+                                    if (factor != null || secondFactor != null) {
+                                        enableBiometric(mode, factor)
+                                    }
+                                },
+                                label = { Text(name) },
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
                 }
             }
             biometricError?.let {
@@ -407,14 +416,15 @@ fun SettingsScreen(
         }
     }
 
-    choosePinFor?.let { mode ->
-        SetPinDialog(
-            onConfirm = { pin ->
-                choosePinFor = null
-                enroll(mode, pin)
-            },
-            onDismiss = { choosePinFor = null },
-        )
+    choosing?.let { (mode, factor) ->
+        val onConfirm = { secret: CharArray ->
+            choosing = null
+            enroll(mode, factor, secret)
+        }
+        when (factor) {
+            SecondFactor.PIN -> SetPinDialog(onConfirm, onDismiss = { choosing = null })
+            SecondFactor.PATTERN -> SetPatternDialog(onConfirm, onDismiss = { choosing = null })
+        }
     }
 
     if (confirmAnyMode) {

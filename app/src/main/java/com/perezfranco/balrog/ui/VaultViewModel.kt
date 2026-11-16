@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.perezfranco.balrog.BalrogApplication
+import com.perezfranco.balrog.crypto.SecondFactor
 import com.perezfranco.balrog.crypto.VaultBackup
 import com.perezfranco.balrog.crypto.VaultKeyManager
 import com.perezfranco.balrog.crypto.VaultKeyManager.BiometricOpenResult
@@ -101,13 +102,14 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Builds the payload for biometric enrollment (a KDF, if there is a PIN). */
     fun prepareBiometricPayload(
+        factor: SecondFactor?,
         pin: CharArray?,
         onReady: (VaultKeyManager.BiometricPayload) -> Unit,
     ) {
         viewModelScope.launch {
             val dek = SessionManager.keyOrNull() ?: return@launch
             val payload = withContext(Dispatchers.Default) {
-                keyManager.prepareBiometricPayload(dek, pin)
+                keyManager.prepareBiometricPayload(dek, factor, pin)
             }
             pin?.fill('\u0000')
             onReady(payload)

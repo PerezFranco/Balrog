@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import com.perezfranco.balrog.crypto.SecondFactor
 import com.perezfranco.balrog.crypto.VaultKeyManager.BiometricOpenResult
 import com.perezfranco.balrog.security.BiometricHelper
 import com.perezfranco.balrog.security.BiometricUnlock
@@ -45,10 +46,13 @@ fun UnlockScreen(
     var biometricAvailable by remember {
         mutableStateOf(viewModel.keyManager.biometricMode()?.let(capability::supports) == true)
     }
-    // Biometric + PIN: what the biometric step released, waiting for the PIN.
+    // Biometric + PIN/pattern: what the biometric step released, awaiting the rest.
     var awaitingPin by remember { mutableStateOf<ByteArray?>(null) }
     var pinError by remember { mutableStateOf<String?>(null) }
     var checkingPin by remember { mutableStateOf(false) }
+
+    val secondFactor = viewModel.keyManager.biometricSecondFactor()
+    val factorName = if (secondFactor == SecondFactor.PATTERN) "pattern" else "PIN"
 
     fun finishBiometric(released: ByteArray, pin: CharArray?) {
         checkingPin = true
@@ -60,13 +64,13 @@ fun UnlockScreen(
                     onUnlocked()
                 }
                 is BiometricOpenResult.WrongPin -> pinError =
-                    "Wrong PIN — ${result.attemptsLeft} " +
+                    "Wrong $factorName — ${result.attemptsLeft} " +
                         (if (result.attemptsLeft == 1) "try" else "tries") + " left"
                 BiometricOpenResult.LockedOut -> {
                     released.fill(0)
                     awaitingPin = null
                     biometricAvailable = false
-                    error = "Too many wrong PINs. Biometric unlock is now off — " +
+                    error = "Too many wrong ${factorName}s. Biometric unlock is now off — " +
                         "use your master password."
                 }
             }
@@ -74,12 +78,11 @@ fun UnlockScreen(
     }
 
     fun tryBiometric() {
-        val needsPin = viewModel.keyManager.biometricRequiresPin()
         BiometricUnlock.unlock(
             activity = activity,
             keyManager = viewModel.keyManager,
             onReleased = { released ->
-                if (needsPin) {
+                if (secondFactor != null) {
                     pinError = null
                     awaitingPin = released
                 } else {
@@ -157,14 +160,24 @@ fun UnlockScreen(
     }
 
     awaitingPin?.let { released ->
-        EnterPinDialog(
-            error = pinError,
-            working = checkingPin,
-            onSubmit = { pin -> finishBiometric(released, pin) },
-            onDismiss = {
-                released.fill(0)
-                awaitingPin = null
-            },
-        )
+        val cancel = {
+            released.fill(0)
+            awaitingPin = null
+        }
+        if (secondFactor == SecondFactor.PATTERN) {
+            EnterPatternDialog(
+                error = pinError,
+                working = checkingPin,
+                onSubmit = { pattern -> finishBiometric(released, pattern) },
+                onDismiss = cancel,
+            )
+        } else {
+            EnterPinDialog(
+                error = pinError,
+                working = checkingPin,
+                onSubmit = { pin -> finishBiometric(released, pin) },
+                onDismiss = cancel,
+            )
+        }
     }
 }

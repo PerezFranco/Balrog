@@ -38,6 +38,9 @@ enum class BiometricMode {
     ANY,
 }
 
+/** What, if anything, biometric unlock asks for after the biometric itself. */
+enum class SecondFactor { PIN, PATTERN }
+
 class VaultKeyManager(context: Context) {
 
     private val prefs: SharedPreferences =
@@ -227,8 +230,9 @@ class VaultKeyManager(context: Context) {
         if (payload.pinSalt != null) {
             edit.putString(KEY_PIN_SALT, encode(payload.pinSalt))
                 .putInt(KEY_PIN_ITERATIONS, payload.pinIterations)
+                .putString(KEY_PIN_KIND, payload.factor?.name)
         } else {
-            edit.remove(KEY_PIN_SALT).remove(KEY_PIN_ITERATIONS)
+            edit.remove(KEY_PIN_SALT).remove(KEY_PIN_ITERATIONS).remove(KEY_PIN_KIND)
         }
         edit.apply()
     }
@@ -244,15 +248,17 @@ class VaultKeyManager(context: Context) {
 
     // ---- Biometric + PIN -----------------------------------------------------
     //
-    // Optionally the biometric unlock also demands a PIN. The vault key is then
-    // sealed under the PIN (see [PinWrap]) *before* the Keystore wraps it, so
-    // what a biometric match releases is still useless without the PIN.
+    // Optionally the biometric unlock also demands a PIN or a nine-dot pattern
+    // (a pattern is treated as a PIN made of its dot numbers). The vault key is
+    // then sealed under it (see [PinWrap]) *before* the Keystore wraps it, so
+    // what a biometric match releases is still useless without it.
 
     /** What gets wrapped by the Keystore key: the DEK, PIN-sealed if a PIN is set. */
     class BiometricPayload internal constructor(
         internal val bytes: ByteArray,
         internal val pinSalt: ByteArray?,
         internal val pinIterations: Int,
+        internal val factor: SecondFactor?,
     )
 
     sealed interface BiometricOpenResult {
@@ -263,29 +269,39 @@ class VaultKeyManager(context: Context) {
         data object LockedOut : BiometricOpenResult
     }
 
-    /** Whether biometric unlock also asks for a PIN. */
-    fun biometricRequiresPin(): Boolean =
-        isBiometricEnabled() && prefs.contains(KEY_PIN_SALT)
+    /** The PIN or pattern biometric unlock also asks for, or null if neither. */
+    fun biometricSecondFactor(): SecondFactor? {
+        if (!isBiometricEnabled() || !prefs.contains(KEY_PIN_SALT)) return null
+        return when (prefs.getString(KEY_PIN_KIND, null)) {
+            SecondFactor.PATTERN.name -> SecondFactor.PATTERN
+            else -> SecondFactor.PIN
+        }
+    }
 
     /**
-     * Builds what biometric enrollment will protect. With a [pin] this runs a
+     * Builds what biometric enrollment will protect. [pin] is the PIN, or the
+     * encoded pattern, for [factor]. With one this runs a
      * key derivation, so call it off the main thread.
      */
-    fun prepareBiometricPayload(dek: SecretKey, pin: CharArray?): BiometricPayload {
-        if (pin == null) return BiometricPayload(dek.encoded, null, 0)
+    fun prepareBiometricPayload(
+        dek: SecretKey,
+        factor: SecondFactor?,
+        pin: CharArray?,
+    ): BiometricPayload {
+        if (factor == null || pin == null) return BiometricPayload(dek.encoded, null, 0, null)
         val sealed = PinWrap.seal(dek.encoded, pin)
-        return BiometricPayload(sealed.blob, sealed.salt, sealed.iterations)
+        return BiometricPayload(sealed.blob, sealed.salt, sealed.iterations, factor)
     }
 
     /**
      * Turns what the biometric step released into the vault key, checking the
-     * [pin] if one is required. Wrong PINs are counted across app restarts;
+     * [pin] (or encoded pattern) if one is required. Wrong ones are counted across app restarts;
      * after [PinWrap.MAX_ATTEMPTS] biometric unlock is switched off and only
      * the master password opens the vault. Runs a key derivation when a PIN
      * is required, so call it off the main thread.
      */
     fun openBiometricPayload(released: ByteArray, pin: CharArray?): BiometricOpenResult {
-        if (!biometricRequiresPin()) {
+        if (biometricSecondFactor() == null) {
             return BiometricOpenResult.Unlocked(SecretKeySpec(released, "AES"))
         }
         val salt = decode(prefs.getString(KEY_PIN_SALT, null).orEmpty())
@@ -322,6 +338,7 @@ class VaultKeyManager(context: Context) {
             .remove(KEY_BIOMETRIC_MODE)
             .remove(KEY_PIN_SALT)
             .remove(KEY_PIN_ITERATIONS)
+            .remove(KEY_PIN_KIND)
             .remove(KEY_PIN_FAILURES)
             .apply()
         deleteKeystoreKey()
@@ -392,6 +409,7 @@ class VaultKeyManager(context: Context) {
         const val KEY_BIOMETRIC_MODE = "biometric_mode"
         const val KEY_PIN_SALT = "biometric_pin_salt"
         const val KEY_PIN_ITERATIONS = "biometric_pin_iterations"
+        const val KEY_PIN_KIND = "biometric_pin_kind"
         const val KEY_PIN_FAILURES = "biometric_pin_failures"
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val KEYSTORE_ALIAS = "balrog_biometric_dek_wrapper"
