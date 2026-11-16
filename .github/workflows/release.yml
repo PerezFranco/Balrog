@@ -1,49 +1,76 @@
 name: Release
 
-# Push a tag like v1.1.0 to publish that commit's APK as a GitHub Release.
+# Publishes the APK as a GitHub Release, once per version: whenever
+# versionName in app/build.gradle.kts names a version that has no release
+# yet, that commit is built, tagged v<versionName> and released.
 on:
   push:
-    tags: ['v*']
+    branches: [main, 'ccr-**', 'claude/**']
+    paths:
+      - app/build.gradle.kts
+      - .github/workflows/release.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency: release
 
 jobs:
   release:
     runs-on: ubuntu-latest
     env:
+      GH_TOKEN: ${{ github.token }}
       KEYSTORE_BASE64: ${{ secrets.BALROG_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check whether this version is already released
+        id: version
+        run: |
+          version=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' app/build.gradle.kts)
+          test -n "$version"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "v$version is already released; nothing to do."
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-java@v4
+        if: steps.version.outputs.needed
         with:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
+        if: steps.version.outputs.needed
       - name: Unit tests
+        if: steps.version.outputs.needed
         run: ./gradlew test
       - name: Use the release signing key, if one is configured
-        if: env.KEYSTORE_BASE64 != ''
+        if: steps.version.outputs.needed && env.KEYSTORE_BASE64 != ''
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/balrog.jks"
           echo "BALROG_KEYSTORE=$RUNNER_TEMP/balrog.jks" >> "$GITHUB_ENV"
       - name: Build APK
+        if: steps.version.outputs.needed
         env:
           BALROG_KEYSTORE_PASSWORD: ${{ secrets.BALROG_KEYSTORE_PASSWORD }}
           BALROG_KEY_ALIAS: ${{ secrets.BALROG_KEY_ALIAS }}
           BALROG_KEY_PASSWORD: ${{ secrets.BALROG_KEY_PASSWORD }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
           ./gradlew assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk "Balrog-$GITHUB_REF_NAME.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "Balrog-$TAG.apk"
       - name: Publish release
+        if: steps.version.outputs.needed
         env:
-          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             signing="Signed with the project's release key; installs over earlier releases signed the same way."
           else
             signing="Signed with a one-off key: to move to or from this release, save a backup in Settings, uninstall, install, then restore."
           fi
-          gh release create "$GITHUB_REF_NAME" "Balrog-$GITHUB_REF_NAME.apk" \
-            --title "Balrog ${GITHUB_REF_NAME#v}" \
-            --notes "Download **Balrog-$GITHUB_REF_NAME.apk** below and open it on your Android phone (Android 8.0 or newer). $signing"
+          gh release create "$TAG" "Balrog-$TAG.apk" \
+            --target "$GITHUB_SHA" \
+            --title "Balrog ${TAG#v}" \
+            --notes "Download **Balrog-$TAG.apk** below and open it on your Android phone (Android 8.0 or newer). $signing"

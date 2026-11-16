@@ -163,8 +163,10 @@ debug APK to the run.
 
 ## Releases
 
-Pushing a tag such as `v1.1.0` makes GitHub Actions build the APK and attach
-it to a GitHub Release. Android will only update an installed app with an APK
+Each version is published once as a GitHub Release with the APK attached: when
+a push changes `versionName` in `app/build.gradle.kts` to a version that has
+no release yet, GitHub Actions builds that commit, tags it `v<versionName>`
+and releases it. Android will only update an installed app with an APK
 signed by the same key, so for releases you can install over one another, add
 a signing key to the repository's Actions secrets:
 
