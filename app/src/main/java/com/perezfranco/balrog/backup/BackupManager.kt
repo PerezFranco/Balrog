@@ -71,7 +71,9 @@ class BackupManager(
         val dek = SessionManager.requireKey()
         val material = checkNotNull(keyManager.exportKeyMaterial()) { "No vault" }
         val records = repository.exportRecords()
-        val bytes = VaultBackup.encode(material, records, dek).encodeToByteArray()
+        val bytes = VaultBackup.encode(
+            material, records, dek, tombstones = repository.exportTombstones(),
+        ).encodeToByteArray()
         val resolver = appContext.contentResolver
         // "wt" truncates, so a shrinking vault can't leave stale bytes behind;
         // a few providers only understand plain "w".

@@ -41,7 +41,10 @@ fun BalrogApp(activity: FragmentActivity) {
     // Whenever the session locks (auto-lock, manual lock), snap back to the
     // unlock screen and clear the back stack so nothing sensitive remains.
     LaunchedEffect(isUnlocked) {
-        if (isUnlocked) viewModel.backupManager.onUnlocked()
+        if (isUnlocked) {
+            viewModel.backupManager.onUnlocked()
+            viewModel.syncManager.onUnlocked()
+        }
         if (!isUnlocked && viewModel.vaultExists()) {
             navController.navigate(Routes.UNLOCK) {
                 popUpTo(0) { inclusive = true }

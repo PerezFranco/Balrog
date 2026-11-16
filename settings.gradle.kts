@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Balrog"
 include(":app")
+include(":core")
