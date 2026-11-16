@@ -46,16 +46,19 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.perezfranco.balrog.security.ClipboardHelper
 import com.perezfranco.balrog.security.PasswordGenerator
+import com.perezfranco.balrog.ui.VaultViewModel
 import kotlin.math.roundToInt
 
 private val SEPARATORS = listOf("-" to "Hyphen", "." to "Period", "_" to "Underscore", " " to "Space")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GeneratorScreen(onBack: () -> Unit) {
+fun GeneratorScreen(viewModel: VaultViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val words = remember { WordList.load(context) }
-    var passphraseMode by remember { mutableStateOf(false) }
+    // 0 = random password, 1 = passphrase, 2 = deterministic
+    var tab by remember { mutableIntStateOf(0) }
+    val passphraseMode = tab == 1
     // Bumped by "Regenerate" to force a fresh draw with unchanged options.
     var nonce by remember { mutableIntStateOf(0) }
 
@@ -118,18 +121,18 @@ fun GeneratorScreen(onBack: () -> Unit) {
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            TabRow(selectedTabIndex = if (passphraseMode) 1 else 0) {
-                Tab(
-                    selected = !passphraseMode,
-                    onClick = { passphraseMode = false },
-                    text = { Text("Password") },
-                )
-                Tab(
-                    selected = passphraseMode,
-                    onClick = { passphraseMode = true },
-                    text = { Text("Passphrase") },
-                )
+            TabRow(selectedTabIndex = tab) {
+                listOf("Password", "Passphrase", "Deterministic").forEachIndexed { index, name ->
+                    Tab(
+                        selected = tab == index,
+                        onClick = { tab = index },
+                        text = { Text(name, maxLines = 1) },
+                    )
+                }
             }
+            if (tab == 2) {
+                DeterministicForm(viewModel = viewModel, modifier = Modifier.padding(16.dp))
+            } else
             Column(Modifier.padding(16.dp)) {
                 Surface(
                     tonalElevation = 2.dp,

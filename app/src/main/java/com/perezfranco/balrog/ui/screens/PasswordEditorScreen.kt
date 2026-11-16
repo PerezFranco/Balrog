@@ -21,6 +21,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -61,6 +66,8 @@ fun PasswordEditorScreen(
     var url by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var totp by remember { mutableStateOf("") }
+    var recipe by remember { mutableStateOf("") }
+    var deterministicOpen by remember { mutableStateOf(false) }
     var generateMenuOpen by remember { mutableStateOf(false) }
     // New items start in the folder being viewed.
     var folder by remember {
@@ -78,6 +85,7 @@ fun PasswordEditorScreen(
                 url = it.url
                 notes = it.notes
                 totp = it.totp
+                recipe = it.recipe
                 folder = it.folder
             }
             loaded = true
@@ -135,8 +143,15 @@ fun PasswordEditorScreen(
             Spacer(Modifier.height(12.dp))
             PasswordField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    // An edited password no longer comes from the recipe.
+                    if (it != password) recipe = ""
+                    password = it
+                },
                 label = "Password",
+                supportingText = if (recipe.isNotEmpty()) {
+                    "From the deterministic generator; its recipe is saved with this entry"
+                } else null,
             )
             Spacer(Modifier.height(8.dp))
             Row {
@@ -163,6 +178,7 @@ fun PasswordEditorScreen(
                             onClick = {
                                 generateMenuOpen = false
                                 password = PasswordGenerator.generate(20)
+                                recipe = ""
                             },
                         )
                         DropdownMenuItem(
@@ -172,6 +188,14 @@ fun PasswordEditorScreen(
                                 password = PassphraseGenerator.generate(
                                     WordList.load(context), capitalize = true,
                                 )
+                                recipe = ""
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Deterministic…") },
+                            onClick = {
+                                generateMenuOpen = false
+                                deterministicOpen = true
                             },
                         )
                     }
@@ -219,6 +243,7 @@ fun PasswordEditorScreen(
                             url = url,
                             notes = notes,
                             totp = totp,
+                            recipe = recipe,
                             folder = folder.trim(),
                         )
                     ) { onBack() }
@@ -228,6 +253,40 @@ fun PasswordEditorScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Save")
+            }
+        }
+    }
+
+    if (deterministicOpen) {
+        Dialog(
+            onDismissRequest = { deterministicOpen = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Deterministic password",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = { deterministicOpen = false }) { Text("Cancel") }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    DeterministicForm(
+                        viewModel = viewModel,
+                        initialRecipe = recipe,
+                        onUse = { generated, usedRecipe ->
+                            password = generated
+                            recipe = usedRecipe
+                            deterministicOpen = false
+                        },
+                    )
+                }
             }
         }
     }

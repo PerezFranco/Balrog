@@ -27,10 +27,7 @@ class VaultRepository(private val dao: VaultDao) {
     suspend fun saveItem(item: VaultItem): Long {
         val now = System.currentTimeMillis()
         val payload = encrypt(item.toPayloadJson())
-        val type = when (item) {
-            is PasswordEntry -> ItemType.PASSWORD
-            is SecureNote -> ItemType.NOTE
-        }
+        val type = item.type
         return if (item.id == 0L) {
             dao.insert(
                 VaultItemEntity(
@@ -66,6 +63,7 @@ class VaultRepository(private val dao: VaultDao) {
             val updated = when (item) {
                 is PasswordEntry -> item.copy(folder = new)
                 is SecureNote -> item.copy(folder = new)
+                is Pepper -> item // Peppers are not filed in folders
             }
             dao.update(entity.copy(payload = encrypt(updated.toPayloadJson())))
             moved++
@@ -117,10 +115,7 @@ class VaultRepository(private val dao: VaultDao) {
         val now = System.currentTimeMillis()
         var imported = 0
         for (item in items) {
-            val type = when (item) {
-                is PasswordEntry -> ItemType.PASSWORD
-                is SecureNote -> ItemType.NOTE
-            }
+            val type = item.type
             val created = item.createdAt.takeIf { it > 0 } ?: now
             val updated = item.updatedAt.takeIf { it > 0 } ?: created
             if (insertIfNew(present, type.name, item.toPayloadJson(), created, updated)) imported++
@@ -170,6 +165,7 @@ class VaultRepository(private val dao: VaultDao) {
         return when (entity.type) {
             ItemType.PASSWORD.name -> PasswordEntry.fromPayloadJson(json, entity)
             ItemType.NOTE.name -> SecureNote.fromPayloadJson(json, entity)
+            ItemType.PEPPER.name -> Pepper.fromPayloadJson(json, entity)
             else -> null
         }
     }

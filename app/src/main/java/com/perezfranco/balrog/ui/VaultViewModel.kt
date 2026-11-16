@@ -10,6 +10,8 @@ import com.perezfranco.balrog.crypto.VaultBackup
 import com.perezfranco.balrog.crypto.VaultKeyManager
 import com.perezfranco.balrog.crypto.VaultKeyManager.BiometricOpenResult
 import com.perezfranco.balrog.data.PasswordEntry
+import com.perezfranco.balrog.data.Pepper
+import com.perezfranco.balrog.security.DeterministicGenerator
 import com.perezfranco.balrog.importer.BitwardenImport
 import com.perezfranco.balrog.data.VaultItem
 import com.perezfranco.balrog.security.SessionManager
@@ -59,6 +61,33 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 .sortedWith(String.CASE_INSENSITIVE_ORDER)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Peppers for the deterministic generator, by name. */
+    val peppers: StateFlow<List<Pepper>> = allItems
+        .map { items ->
+            items.filterIsInstance<Pepper>()
+                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Runs the deterministic generator (a 100,000-round KDF) off the main thread. */
+    fun generateDeterministic(
+        base: String,
+        case: String,
+        salt: String,
+        pepper: String,
+        trim: Int,
+        type: DeterministicGenerator.Type,
+        onResult: (String) -> Unit,
+    ) {
+        viewModelScope.launch {
+            onResult(
+                withContext(Dispatchers.Default) {
+                    DeterministicGenerator.generate(base, case, salt, pepper, trim, type)
+                }
+            )
+        }
+    }
 
     /** The items to list: those in the selected folder that match the search. */
     val items: StateFlow<List<VaultItem>> =

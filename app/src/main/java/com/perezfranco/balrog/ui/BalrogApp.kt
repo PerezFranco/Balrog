@@ -96,7 +96,10 @@ fun BalrogApp(activity: FragmentActivity) {
             )
         }
         composable(Routes.GENERATOR) {
-            GeneratorScreen(onBack = { navController.popBackStack() })
+            GeneratorScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+            )
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(

@@ -27,6 +27,9 @@ fingerprint and face unlock, and two-factor codes built into each entry. *It sha
   export file, two-factor codes included
 - **Automatic backup to Drive, OneDrive, …** — pick a file location once and
   Balrog keeps it up to date every time the vault changes
+- **Deterministic generator** — recreate a password from a recipe (Base,
+  Case, Salt, Pepper, Type, Trim) instead of storing it; the same algorithm
+  as the standalone Generator app, output for output
 - **Auto-lock** — the vault key is dropped after 60 s in the background
 - **Clipboard hygiene** — copies are flagged sensitive and cleared after 30 s
 - **Screenshot blocking** — `FLAG_SECURE` on every screen
@@ -129,6 +132,30 @@ version history (or an occasional manual backup) if you want older copies.
   vault, skipping items that are already there.
 - Biometric unlock is tied to the device and is not part of a backup; turn it
   on again after restoring.
+
+### Deterministic generator
+
+The generator's third tab derives a password from a recipe rather than from
+randomness: the same Base, Case, Salt, Pepper, Type and Trim always give the
+same password, so it can be recreated anywhere instead of being stored. It
+is a line-for-line port of the standalone Generator app
+(`art.zirie.generator`) and must stay output-compatible with it and with its
+JavaScript and PHP versions; the unit tests pin the reference values. **Do
+not alter the algorithm** — any change silently changes every password ever
+derived with it.
+
+- **Recipes** use the Generator's "Full Copy" text format (`Base:` / `Case:`
+  / `Salt:` / `Trim:` / `Type:` / `Pepper:` / `Sane:` lines) and can be
+  pasted or scanned from a QR code in either direction. `Sane` holds the
+  password's first and last character; after regenerating, Balrog says
+  whether the result checks out.
+- **Peppers** are named secrets mixed into the salt. Balrog keeps them in
+  the vault, so unlike in the Generator app they are covered by backups. A
+  recipe records only a Pepper's first and last character; Balrog selects
+  the matching Pepper when exactly one fits, and refuses to generate with
+  one that does not match.
+- In the entry editor, **Generate → Deterministic…** fills the password and
+  saves its recipe with the entry; opening it again starts from that recipe.
 
 ### Importing from Bitwarden
 
