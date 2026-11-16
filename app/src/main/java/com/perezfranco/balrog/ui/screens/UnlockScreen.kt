@@ -26,9 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import com.perezfranco.balrog.crypto.VaultKeyManager.BiometricOpenResult
 import com.perezfranco.balrog.security.BiometricHelper
 import com.perezfranco.balrog.security.BiometricUnlock
-import com.perezfranco.balrog.security.SessionManager
 import com.perezfranco.balrog.ui.VaultViewModel
 
 @Composable
@@ -42,19 +42,55 @@ fun UnlockScreen(
     var working by remember { mutableStateOf(false) }
 
     val capability = remember { BiometricHelper.capability(activity) }
-    val biometricAvailable = remember {
-        viewModel.keyManager.biometricMode()?.let(capability::supports) == true
+    var biometricAvailable by remember {
+        mutableStateOf(viewModel.keyManager.biometricMode()?.let(capability::supports) == true)
+    }
+    // Biometric + PIN: what the biometric step released, waiting for the PIN.
+    var awaitingPin by remember { mutableStateOf<ByteArray?>(null) }
+    var pinError by remember { mutableStateOf<String?>(null) }
+    var checkingPin by remember { mutableStateOf(false) }
+
+    fun finishBiometric(released: ByteArray, pin: CharArray?) {
+        checkingPin = true
+        viewModel.finishBiometricUnlock(released, pin) { result ->
+            checkingPin = false
+            when (result) {
+                is BiometricOpenResult.Unlocked -> {
+                    awaitingPin = null
+                    onUnlocked()
+                }
+                is BiometricOpenResult.WrongPin -> pinError =
+                    "Wrong PIN — ${result.attemptsLeft} " +
+                        (if (result.attemptsLeft == 1) "try" else "tries") + " left"
+                BiometricOpenResult.LockedOut -> {
+                    released.fill(0)
+                    awaitingPin = null
+                    biometricAvailable = false
+                    error = "Too many wrong PINs. Biometric unlock is now off — " +
+                        "use your master password."
+                }
+            }
+        }
     }
 
     fun tryBiometric() {
+        val needsPin = viewModel.keyManager.biometricRequiresPin()
         BiometricUnlock.unlock(
             activity = activity,
             keyManager = viewModel.keyManager,
-            onUnlocked = { dek ->
-                SessionManager.unlock(dek)
-                onUnlocked()
+            onReleased = { released ->
+                if (needsPin) {
+                    pinError = null
+                    awaitingPin = released
+                } else {
+                    finishBiometric(released, null)
+                }
             },
-            onFailure = { message -> if (message != null) error = message },
+            onFailure = { message ->
+                // An invalidated key switches biometric unlock off entirely.
+                biometricAvailable = viewModel.keyManager.biometricMode() != null
+                if (message != null) error = message
+            },
         )
     }
 
@@ -118,5 +154,17 @@ fun UnlockScreen(
                 Text("Unlock with ${capability.label}")
             }
         }
+    }
+
+    awaitingPin?.let { released ->
+        EnterPinDialog(
+            error = pinError,
+            working = checkingPin,
+            onSubmit = { pin -> finishBiometric(released, pin) },
+            onDismiss = {
+                released.fill(0)
+                awaitingPin = null
+            },
+        )
     }
 }

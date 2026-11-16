@@ -153,22 +153,22 @@ class VaultKeyManager(context: Context) {
         }
     }
 
-    /** STRONG mode, step 2: wraps the DEK with the cipher the prompt authorized. */
-    fun finishBiometricEnroll(authorizedCipher: Cipher, dek: SecretKey) {
-        storeBiometricWrap(authorizedCipher, dek, BiometricMode.STRONG)
+    /** STRONG mode, step 2: wraps the payload with the cipher the prompt authorized. */
+    fun finishBiometricEnroll(authorizedCipher: Cipher, payload: BiometricPayload) {
+        storeBiometricWrap(authorizedCipher, payload, BiometricMode.STRONG)
     }
 
     /**
-     * ANY mode: wraps the DEK under a device-bound key. Call only after the
-     * user has passed a biometric prompt.
+     * ANY mode: wraps the payload under a device-bound key. Call only after
+     * the user has passed a biometric prompt.
      */
-    fun enrollAnyBiometric(dek: SecretKey) {
+    fun enrollAnyBiometric(payload: BiometricPayload) {
         deleteKeystoreKey()
         val keystoreKey = createKeystoreKey(BiometricMode.ANY)
         val cipher = Cipher.getInstance(AES_GCM).apply {
             init(Cipher.ENCRYPT_MODE, keystoreKey)
         }
-        storeBiometricWrap(cipher, dek, BiometricMode.ANY)
+        storeBiometricWrap(cipher, payload, BiometricMode.ANY)
     }
 
     /**
@@ -189,18 +189,21 @@ class VaultKeyManager(context: Context) {
         }
     }
 
-    /** STRONG mode: completes unlock with the cipher authorized by the prompt. */
-    fun finishBiometricUnlock(authorizedCipher: Cipher): SecretKey? =
-        unwrapBiometricDek(authorizedCipher)
+    /**
+     * STRONG mode: completes the biometric step with the cipher authorized by
+     * the prompt. The result goes to [openBiometricPayload].
+     */
+    fun finishBiometricUnlock(authorizedCipher: Cipher): ByteArray? =
+        unwrapBiometricPayload(authorizedCipher)
 
     /**
-     * ANY mode: unwraps the DEK. Call only after the user has passed a
-     * biometric prompt.
+     * ANY mode: completes the biometric step. Call only after the user has
+     * passed a biometric prompt. The result goes to [openBiometricPayload].
      */
-    fun unlockWithAnyBiometric(): SecretKey? {
+    fun unlockWithAnyBiometric(): ByteArray? {
         if (biometricMode() != BiometricMode.ANY) return null
         return try {
-            unlockCipher()?.let(::unwrapBiometricDek)
+            unlockCipher()?.let(::unwrapBiometricPayload)
         } catch (e: GeneralSecurityException) {
             null
         }
@@ -214,23 +217,96 @@ class VaultKeyManager(context: Context) {
         }
     }
 
-    private fun storeBiometricWrap(cipher: Cipher, dek: SecretKey, mode: BiometricMode) {
-        val wrapped = cipher.doFinal(dek.encoded)
-        prefs.edit()
+    private fun storeBiometricWrap(cipher: Cipher, payload: BiometricPayload, mode: BiometricMode) {
+        val wrapped = cipher.doFinal(payload.bytes)
+        val edit = prefs.edit()
             .putString(KEY_BIOMETRIC_IV, encode(cipher.iv))
             .putString(KEY_BIOMETRIC_WRAPPED_DEK, encode(wrapped))
             .putString(KEY_BIOMETRIC_MODE, mode.name)
-            .apply()
+            .remove(KEY_PIN_FAILURES)
+        if (payload.pinSalt != null) {
+            edit.putString(KEY_PIN_SALT, encode(payload.pinSalt))
+                .putInt(KEY_PIN_ITERATIONS, payload.pinIterations)
+        } else {
+            edit.remove(KEY_PIN_SALT).remove(KEY_PIN_ITERATIONS)
+        }
+        edit.apply()
     }
 
-    private fun unwrapBiometricDek(cipher: Cipher): SecretKey? {
+    private fun unwrapBiometricPayload(cipher: Cipher): ByteArray? {
         val wrapped = decode(prefs.getString(KEY_BIOMETRIC_WRAPPED_DEK, null) ?: return null)
         return try {
-            val dekBytes = cipher.doFinal(wrapped)
-            SecretKeySpec(dekBytes, "AES").also { dekBytes.fill(0) }
+            cipher.doFinal(wrapped)
         } catch (e: GeneralSecurityException) {
             null
         }
+    }
+
+    // ---- Biometric + PIN -----------------------------------------------------
+    //
+    // Optionally the biometric unlock also demands a PIN. The vault key is then
+    // sealed under the PIN (see [PinWrap]) *before* the Keystore wraps it, so
+    // what a biometric match releases is still useless without the PIN.
+
+    /** What gets wrapped by the Keystore key: the DEK, PIN-sealed if a PIN is set. */
+    class BiometricPayload internal constructor(
+        internal val bytes: ByteArray,
+        internal val pinSalt: ByteArray?,
+        internal val pinIterations: Int,
+    )
+
+    sealed interface BiometricOpenResult {
+        class Unlocked(val dek: SecretKey) : BiometricOpenResult
+        class WrongPin(val attemptsLeft: Int) : BiometricOpenResult
+
+        /** Too many wrong PINs: biometric unlock has been switched off. */
+        data object LockedOut : BiometricOpenResult
+    }
+
+    /** Whether biometric unlock also asks for a PIN. */
+    fun biometricRequiresPin(): Boolean =
+        isBiometricEnabled() && prefs.contains(KEY_PIN_SALT)
+
+    /**
+     * Builds what biometric enrollment will protect. With a [pin] this runs a
+     * key derivation, so call it off the main thread.
+     */
+    fun prepareBiometricPayload(dek: SecretKey, pin: CharArray?): BiometricPayload {
+        if (pin == null) return BiometricPayload(dek.encoded, null, 0)
+        val sealed = PinWrap.seal(dek.encoded, pin)
+        return BiometricPayload(sealed.blob, sealed.salt, sealed.iterations)
+    }
+
+    /**
+     * Turns what the biometric step released into the vault key, checking the
+     * [pin] if one is required. Wrong PINs are counted across app restarts;
+     * after [PinWrap.MAX_ATTEMPTS] biometric unlock is switched off and only
+     * the master password opens the vault. Runs a key derivation when a PIN
+     * is required, so call it off the main thread.
+     */
+    fun openBiometricPayload(released: ByteArray, pin: CharArray?): BiometricOpenResult {
+        if (!biometricRequiresPin()) {
+            return BiometricOpenResult.Unlocked(SecretKeySpec(released, "AES"))
+        }
+        val salt = decode(prefs.getString(KEY_PIN_SALT, null).orEmpty())
+        val iterations = prefs.getInt(KEY_PIN_ITERATIONS, PinWrap.KDF_ITERATIONS)
+        // Count the attempt before checking it, and synchronously, so killing
+        // the app mid-check can't be used to get free guesses.
+        val failures = prefs.getInt(KEY_PIN_FAILURES, 0) + 1
+        prefs.edit().putInt(KEY_PIN_FAILURES, failures).commit()
+
+        val dekBytes = if (pin == null) null else PinWrap.open(released, salt, iterations, pin)
+        if (dekBytes != null) {
+            prefs.edit().remove(KEY_PIN_FAILURES).apply()
+            return BiometricOpenResult.Unlocked(
+                SecretKeySpec(dekBytes, "AES").also { dekBytes.fill(0) }
+            )
+        }
+        if (failures >= PinWrap.MAX_ATTEMPTS) {
+            disableBiometric()
+            return BiometricOpenResult.LockedOut
+        }
+        return BiometricOpenResult.WrongPin(PinWrap.MAX_ATTEMPTS - failures)
     }
 
     /** Removes all key material; the vault can be set up again from scratch. */
@@ -244,6 +320,9 @@ class VaultKeyManager(context: Context) {
             .remove(KEY_BIOMETRIC_IV)
             .remove(KEY_BIOMETRIC_WRAPPED_DEK)
             .remove(KEY_BIOMETRIC_MODE)
+            .remove(KEY_PIN_SALT)
+            .remove(KEY_PIN_ITERATIONS)
+            .remove(KEY_PIN_FAILURES)
             .apply()
         deleteKeystoreKey()
     }
@@ -311,6 +390,9 @@ class VaultKeyManager(context: Context) {
         const val KEY_BIOMETRIC_IV = "biometric_iv"
         const val KEY_BIOMETRIC_WRAPPED_DEK = "biometric_wrapped_dek"
         const val KEY_BIOMETRIC_MODE = "biometric_mode"
+        const val KEY_PIN_SALT = "biometric_pin_salt"
+        const val KEY_PIN_ITERATIONS = "biometric_pin_iterations"
+        const val KEY_PIN_FAILURES = "biometric_pin_failures"
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val KEYSTORE_ALIAS = "balrog_biometric_dek_wrapper"
         const val AES_GCM = "AES/GCM/NoPadding"

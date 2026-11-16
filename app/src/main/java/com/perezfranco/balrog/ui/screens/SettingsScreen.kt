@@ -45,7 +45,6 @@ import androidx.fragment.app.FragmentActivity
 import com.perezfranco.balrog.crypto.BiometricMode
 import com.perezfranco.balrog.security.BiometricHelper
 import com.perezfranco.balrog.security.BiometricUnlock
-import com.perezfranco.balrog.security.SessionManager
 import com.perezfranco.balrog.ui.VaultViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,21 +121,39 @@ fun SettingsScreen(
     var showChangePassword by remember { mutableStateOf(false) }
     var showDestroy by remember { mutableStateOf(false) }
 
-    fun enableBiometric(mode: BiometricMode) {
-        BiometricUnlock.enroll(
-            activity = activity,
-            keyManager = keyManager,
-            mode = mode,
-            dek = SessionManager.requireKey(),
-            onEnrolled = {
-                biometricMode = keyManager.biometricMode()
-                biometricError = null
-            },
-            onFailure = { message ->
-                biometricMode = keyManager.biometricMode()
-                if (message != null) biometricError = message
-            },
-        )
+    var pinRequired by remember { mutableStateOf(keyManager.biometricRequiresPin()) }
+    // Set while the user is choosing a PIN; holds the mode to enroll afterwards.
+    var choosePinFor by remember { mutableStateOf<BiometricMode?>(null) }
+
+    fun refreshBiometricState() {
+        biometricMode = keyManager.biometricMode()
+        pinRequired = keyManager.biometricRequiresPin()
+    }
+
+    // Every change to biometric settings is a fresh enrollment: a new key,
+    // and a biometric prompt to confirm it is really the owner asking.
+    fun enroll(mode: BiometricMode, pin: CharArray?) {
+        viewModel.prepareBiometricPayload(pin) { payload ->
+            BiometricUnlock.enroll(
+                activity = activity,
+                keyManager = keyManager,
+                mode = mode,
+                payload = payload,
+                onEnrolled = {
+                    refreshBiometricState()
+                    biometricError = null
+                },
+                onFailure = { message ->
+                    refreshBiometricState()
+                    if (message != null) biometricError = message
+                },
+            )
+        }
+    }
+
+    /** Enrolls in [mode], first asking for a PIN if one is (to be) required. */
+    fun enableBiometric(mode: BiometricMode, withPin: Boolean = pinRequired) {
+        if (withPin) choosePinFor = mode else enroll(mode, null)
     }
 
     Scaffold(
@@ -183,7 +200,7 @@ fun SettingsScreen(
                         when {
                             !wanted -> {
                                 keyManager.disableBiometric()
-                                biometricMode = null
+                                refreshBiometricState()
                             }
                             capability.strong -> enableBiometric(BiometricMode.STRONG)
                             // Only a weaker biometric (typically face) is enrolled.
@@ -214,6 +231,29 @@ fun SettingsScreen(
                         onCheckedChange = { wanted ->
                             if (wanted) confirmAnyMode = true
                             else enableBiometric(BiometricMode.STRONG)
+                        },
+                    )
+                }
+            }
+            if (biometricMode != null) {
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Also require a PIN")
+                        Text(
+                            "Unlock with ${capability.label} and then a PIN. " +
+                                "Protects the vault if someone gets hold of your " +
+                                "finger or face — or a copy of them.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Switch(
+                        checked = pinRequired,
+                        onCheckedChange = { wanted ->
+                            biometricMode?.let { enableBiometric(it, withPin = wanted) }
                         },
                     )
                 }
@@ -365,6 +405,16 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+
+    choosePinFor?.let { mode ->
+        SetPinDialog(
+            onConfirm = { pin ->
+                choosePinFor = null
+                enroll(mode, pin)
+            },
+            onDismiss = { choosePinFor = null },
+        )
     }
 
     if (confirmAnyMode) {

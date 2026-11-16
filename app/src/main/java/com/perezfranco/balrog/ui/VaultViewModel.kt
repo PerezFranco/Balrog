@@ -6,6 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.perezfranco.balrog.BalrogApplication
 import com.perezfranco.balrog.crypto.VaultBackup
+import com.perezfranco.balrog.crypto.VaultKeyManager
+import com.perezfranco.balrog.crypto.VaultKeyManager.BiometricOpenResult
 import com.perezfranco.balrog.data.PasswordEntry
 import com.perezfranco.balrog.importer.BitwardenImport
 import com.perezfranco.balrog.data.VaultItem
@@ -94,6 +96,43 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
             current.fill('\u0000')
             new.fill('\u0000')
             onResult(ok)
+        }
+    }
+
+    /** Builds the payload for biometric enrollment (a KDF, if there is a PIN). */
+    fun prepareBiometricPayload(
+        pin: CharArray?,
+        onReady: (VaultKeyManager.BiometricPayload) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val dek = SessionManager.keyOrNull() ?: return@launch
+            val payload = withContext(Dispatchers.Default) {
+                keyManager.prepareBiometricPayload(dek, pin)
+            }
+            pin?.fill('\u0000')
+            onReady(payload)
+        }
+    }
+
+    /**
+     * Finishes a biometric unlock: [released] is what the biometric step
+     * produced, [pin] the PIN if one is required. Unlocks the session on success.
+     */
+    fun finishBiometricUnlock(
+        released: ByteArray,
+        pin: CharArray?,
+        onResult: (BiometricOpenResult) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.Default) {
+                keyManager.openBiometricPayload(released, pin)
+            }
+            pin?.fill('\u0000')
+            if (result is BiometricOpenResult.Unlocked) {
+                released.fill(0)
+                SessionManager.unlock(result.dek)
+            }
+            onResult(result)
         }
     }
 

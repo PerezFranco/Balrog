@@ -12,8 +12,9 @@ fingerprint and face unlock, and two-factor codes built into each entry. *It sha
   live 6-digit code next to the password, ready to copy
 - **Secure notes** — free-form encrypted notes
 - **Master password** — the only way in; never stored, never recoverable
-- **Fingerprint and face unlock** — hardware-backed via the Android
-  Keystore, with an opt-in mode for phones whose face unlock Android rates
+- **Fingerprint and face unlock, optionally with a PIN** — hardware-backed
+  via the Android Keystore; add a PIN to require something you are *and*
+  something you know. There is an opt-in mode for phones whose face unlock Android rates
   below "strong" (see below)
 - **Password and passphrase generator** — cryptographically secure random
   strings with configurable character classes, or diceware-style passphrases
@@ -72,6 +73,15 @@ trade-off, and the app says so before enabling it: someone who can add their
 own face or fingerprint to the phone could open the vault, and a rooted
 device could bypass the prompt. The master password always works in either
 mode.
+
+**Biometric + PIN.** Settings → *Also require a PIN* makes unlocking take a
+fingerprint or face **and then** a PIN. The PIN is a real second factor, not
+a screen in front of the vault: the vault key is sealed under a key derived
+from the PIN before the Keystore wraps it, so what a biometric match releases
+is useless without the PIN. Five wrong PINs switch biometric unlock off and
+leave only the master password. It is one PIN for every enrolled finger and
+face — Android does not tell apps which one matched. (Android also offers no
+way to demand two different biometrics at once.)
 
 ### Two-factor codes
 

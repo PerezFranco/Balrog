@@ -3,11 +3,14 @@ package com.perezfranco.balrog.security
 import androidx.fragment.app.FragmentActivity
 import com.perezfranco.balrog.crypto.BiometricMode
 import com.perezfranco.balrog.crypto.VaultKeyManager
-import javax.crypto.SecretKey
 
 /**
  * The two biometric flows — turning biometric unlock on, and using it —
- * for either [BiometricMode]. Failure callbacks receive a message to show,
+ * for either [BiometricMode]. Both stop short of the vault key itself:
+ * enrolling takes a payload from [VaultKeyManager.prepareBiometricPayload],
+ * and unlocking hands what the biometric released to
+ * [VaultKeyManager.openBiometricPayload], which is where a PIN, if required,
+ * comes in. Failure callbacks receive a message to show,
  * or null if the user simply dismissed the prompt.
  */
 object BiometricUnlock {
@@ -16,7 +19,7 @@ object BiometricUnlock {
         activity: FragmentActivity,
         keyManager: VaultKeyManager,
         mode: BiometricMode,
-        dek: SecretKey,
+        payload: VaultKeyManager.BiometricPayload,
         onEnrolled: () -> Unit,
         onFailure: (String?) -> Unit,
     ) {
@@ -34,7 +37,7 @@ object BiometricUnlock {
                     activity, title, subtitle, "Cancel", cipher,
                     onSuccess = { authorized ->
                         try {
-                            keyManager.finishBiometricEnroll(authorized, dek)
+                            keyManager.finishBiometricEnroll(authorized, payload)
                             onEnrolled()
                         } catch (e: Exception) {
                             keyManager.disableBiometric()
@@ -51,7 +54,7 @@ object BiometricUnlock {
                 activity, title, subtitle, "Cancel",
                 onSuccess = {
                     try {
-                        keyManager.enrollAnyBiometric(dek)
+                        keyManager.enrollAnyBiometric(payload)
                         onEnrolled()
                     } catch (e: Exception) {
                         keyManager.disableBiometric()
@@ -66,7 +69,7 @@ object BiometricUnlock {
     fun unlock(
         activity: FragmentActivity,
         keyManager: VaultKeyManager,
-        onUnlocked: (SecretKey) -> Unit,
+        onReleased: (ByteArray) -> Unit,
         onFailure: (String?) -> Unit,
     ) {
         val title = "Unlock Balrog"
@@ -80,8 +83,8 @@ object BiometricUnlock {
                 BiometricHelper.authenticateStrong(
                     activity, title, subtitle, "Use master password", cipher,
                     onSuccess = { authorized ->
-                        val dek = keyManager.finishBiometricUnlock(authorized)
-                        if (dek != null) onUnlocked(dek) else onFailure(failed)
+                        val released = keyManager.finishBiometricUnlock(authorized)
+                        if (released != null) onReleased(released) else onFailure(failed)
                     },
                     onFailure = onFailure,
                 )
@@ -89,8 +92,8 @@ object BiometricUnlock {
             BiometricMode.ANY -> BiometricHelper.authenticateAny(
                 activity, title, subtitle, "Use master password",
                 onSuccess = {
-                    val dek = keyManager.unlockWithAnyBiometric()
-                    if (dek != null) onUnlocked(dek) else onFailure(failed)
+                    val released = keyManager.unlockWithAnyBiometric()
+                    if (released != null) onReleased(released) else onFailure(failed)
                 },
                 onFailure = onFailure,
             )

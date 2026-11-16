@@ -28,6 +28,7 @@ fun PasswordField(
     modifier: Modifier = Modifier,
     isError: Boolean = false,
     supportingText: String? = null,
+    keyboardType: KeyboardType = KeyboardType.Password,
 ) {
     var visible by remember { mutableStateOf(false) }
     OutlinedTextField(
@@ -39,7 +40,7 @@ fun PasswordField(
         supportingText = supportingText?.let { { Text(it) } },
         visualTransformation =
             if (visible) VisualTransformation.None else PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         trailingIcon = {
             IconButton(onClick = { visible = !visible }) {
                 Icon(
