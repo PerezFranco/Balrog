@@ -9,7 +9,6 @@ import com.perezfranco.balrog.crypto.VaultKeyManager
 import com.perezfranco.balrog.data.VaultDatabase
 import com.perezfranco.balrog.data.VaultRepository
 import com.perezfranco.balrog.security.SessionManager
-import com.perezfranco.balrog.sync.SyncManager
 
 class BalrogApplication : Application() {
 
@@ -20,20 +19,6 @@ class BalrogApplication : Application() {
 
     val backupManager: BackupManager by lazy {
         BackupManager(this, keyManager, repository)
-    }
-
-    val syncManager: SyncManager by lazy {
-        SyncManager(
-            this, keyManager, repository,
-            // What arrived from another device belongs in the backup file too.
-            onPulled = { backupManager.onVaultChanged() },
-        )
-    }
-
-    /** Call after anything changes the vault's contents or master password. */
-    fun onVaultChanged() {
-        backupManager.onVaultChanged()
-        syncManager.onVaultChanged()
     }
 
     override fun onCreate() {

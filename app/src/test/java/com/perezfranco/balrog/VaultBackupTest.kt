@@ -97,57 +97,6 @@ class VaultBackupTest {
     }
 
     @Test
-    fun `ids, deletions and key material are carried and sealed`() {
-        val withIds = records.mapIndexed { i, r ->
-            VaultBackup.Record(r.type, r.payload, r.createdAt, r.updatedAt, uid = "id-$i")
-        }
-        val text = VaultBackup.encode(
-            material, withIds, dek, tombstones = listOf(VaultBackup.Tombstone("gone", 77)),
-        )
-        val backup = VaultBackup.parse(text)
-        VaultBackup.verify(backup, dek)
-        assertEquals(listOf("id-0", "id-1", "id-2"), backup.records.map { it.uid })
-        assertEquals(listOf("gone" to 77L), backup.tombstones.map { it.uid to it.deletedAt })
-
-        fun tampered(change: (JSONObject) -> Unit) = JSONObject(text).also(change).toString()
-        assertRejects<VaultBackup.InvalidBackupException>(
-            tampered { it.getJSONArray("items").getJSONObject(0).put("uid", "other") }
-        )
-        assertRejects<VaultBackup.InvalidBackupException>(
-            tampered { it.put("deleted", org.json.JSONArray()) }
-        )
-        assertRejects<VaultBackup.InvalidBackupException>(tampered { it.put("keyUpdatedAt", 5) })
-    }
-
-    @Test
-    fun `version 1 files are still read`() {
-        // As written by Balrog 1.1–1.4: no ids, no deletions, records-only seal.
-        val v1 = JSONObject(file).apply {
-            put("version", 1)
-            remove("deleted")
-            remove("keyUpdatedAt")
-            val items = getJSONArray("items")
-            for (i in 0 until items.length()) items.getJSONObject(i).remove("uid")
-        }
-        // Recompute the seal the way version 1 did.
-        val sha = java.security.MessageDigest.getInstance("SHA-256")
-        fun putInt(n: Int) = sha.update(java.nio.ByteBuffer.allocate(4).putInt(n).array())
-        putInt(records.size)
-        for (r in records) {
-            val type = r.type.encodeToByteArray()
-            putInt(type.size); sha.update(type)
-            sha.update(java.nio.ByteBuffer.allocate(8).putLong(r.createdAt).array())
-            sha.update(java.nio.ByteBuffer.allocate(8).putLong(r.updatedAt).array())
-            putInt(r.payload.size); sha.update(r.payload)
-        }
-        v1.put("seal", java.util.Base64.getEncoder().encodeToString(CryptoEngine.encrypt(dek, sha.digest())))
-        val backup = VaultBackup.parse(v1.toString())
-        VaultBackup.open(backup, password.toCharArray())
-        assertEquals(3, backup.records.size)
-        assertTrue(backup.records.all { it.uid.isEmpty() })
-    }
-
-    @Test
     fun `files that are not backups are rejected`() {
         for (text in listOf("", "hello", "{}", """{"format":"balrog-backup","version":1}""")) {
             assertRejects<VaultBackup.InvalidBackupException>(text)

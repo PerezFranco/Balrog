@@ -5,9 +5,7 @@ import com.perezfranco.balrog.crypto.VaultBackup
 import com.perezfranco.balrog.security.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import com.perezfranco.balrog.sync.VaultMerge
 import java.security.GeneralSecurityException
-import java.util.UUID
 import javax.crypto.SecretKey
 
 /** Outcome of an import: items added, and items skipped as already present. */
@@ -33,7 +31,6 @@ class VaultRepository(private val dao: VaultDao) {
         return if (item.id == 0L) {
             dao.insert(
                 VaultItemEntity(
-                    uid = newUid(),
                     type = type.name, payload = payload,
                     createdAt = now, updatedAt = now,
                 )
@@ -48,16 +45,10 @@ class VaultRepository(private val dao: VaultDao) {
     }
 
     suspend fun deleteItem(id: Long) {
-        val entity = dao.getById(id) ?: return
-        dao.delete(entity)
-        // Remembered so that the deletion reaches the user's other devices.
-        dao.putTombstone(TombstoneEntity(entity.uid, System.currentTimeMillis()))
+        dao.getById(id)?.let { dao.delete(it) }
     }
 
-    suspend fun deleteAll() {
-        dao.deleteAll()
-        dao.deleteAllTombstones()
-    }
+    suspend fun deleteAll() = dao.deleteAll()
 
     /**
      * Moves every item in folder [old] to folder [new] (empty = no folder).
@@ -74,12 +65,7 @@ class VaultRepository(private val dao: VaultDao) {
                 is SecureNote -> item.copy(folder = new)
                 is Pepper -> item // Peppers are not filed in folders
             }
-            dao.update(
-                entity.copy(
-                    payload = encrypt(updated.toPayloadJson()),
-                    updatedAt = System.currentTimeMillis(),
-                )
-            )
+            dao.update(entity.copy(payload = encrypt(updated.toPayloadJson())))
             moved++
         }
         return moved
@@ -89,72 +75,7 @@ class VaultRepository(private val dao: VaultDao) {
 
     /** Every record exactly as stored (still encrypted), for a backup file. */
     suspend fun exportRecords(): List<VaultBackup.Record> =
-        dao.getAll().map {
-            VaultBackup.Record(it.type, it.payload, it.createdAt, it.updatedAt, it.uid)
-        }
-
-    suspend fun exportTombstones(): List<VaultBackup.Tombstone> =
-        dao.getTombstones().map { VaultBackup.Tombstone(it.uid, it.deletedAt) }
-
-    /** Takes over a vault file's deletions; for a vault being set up from that file. */
-    suspend fun adoptTombstones(tombstones: List<VaultBackup.Tombstone>) {
-        for (t in tombstones) dao.putTombstone(TombstoneEntity(t.uid, t.deletedAt))
-    }
-
-    // ---- Sync ------------------------------------------------------------------
-
-    /**
-     * Brings this device up to date with [merged], the result of merging its
-     * vault with the server's. Records are ciphertext under the shared vault
-     * key and are stored as they are. Anything edited on this device after
-     * the merge was computed is left alone; it goes out with the next sync.
-     * Returns the number of items changed.
-     */
-    suspend fun applyMerged(merged: VaultMerge.State): Int {
-        var changes = 0
-        val deletions = merged.tombstones.associate { it.uid to it.deletedAt }
-        val incoming = merged.records.associateBy { it.uid }
-        for (entity in dao.getAll()) {
-            val deletedAt = deletions[entity.uid]
-            if (deletedAt != null && deletedAt >= entity.updatedAt) {
-                dao.delete(entity)
-                changes++
-                continue
-            }
-            val record = incoming[entity.uid] ?: continue
-            if (record.updatedAt > entity.updatedAt ||
-                (record.updatedAt == entity.updatedAt &&
-                    !record.payload.contentEquals(entity.payload))
-            ) {
-                dao.update(
-                    entity.copy(
-                        type = record.type, payload = record.payload,
-                        createdAt = record.createdAt, updatedAt = record.updatedAt,
-                    )
-                )
-                changes++
-            }
-        }
-        for (record in merged.records) {
-            if (dao.getByUid(record.uid) != null) continue
-            dao.insert(
-                VaultItemEntity(
-                    uid = record.uid, type = record.type, payload = record.payload,
-                    createdAt = record.createdAt, updatedAt = record.updatedAt,
-                )
-            )
-            changes++
-        }
-        val known = dao.getTombstones().associate { it.uid to it.deletedAt }
-        for ((uid, deletedAt) in deletions) {
-            if (known[uid] != deletedAt) dao.putTombstone(TombstoneEntity(uid, deletedAt))
-        }
-        // An item that came back to life elsewhere is no longer deleted here.
-        for (uid in known.keys - deletions.keys) {
-            if (uid in incoming) dao.deleteTombstone(uid)
-        }
-        return changes
-    }
+        dao.getAll().map { VaultBackup.Record(it.type, it.payload, it.createdAt, it.updatedAt) }
 
     /**
      * Adds a backup's records to the vault, re-encrypting them from
@@ -175,10 +96,7 @@ class VaultRepository(private val dao: VaultDao) {
                 continue
             }
             val json = CryptoEngine.decrypt(backupKey, record.payload).decodeToString()
-            if (insertIfNew(
-                    present, record.type, json, record.createdAt, record.updatedAt, record.uid,
-                )
-            ) {
+            if (insertIfNew(present, record.type, json, record.createdAt, record.updatedAt)) {
                 imported++
             } else {
                 skipped++
@@ -221,17 +139,10 @@ class VaultRepository(private val dao: VaultDao) {
         json: String,
         createdAt: Long,
         updatedAt: Long,
-        uid: String = "",
     ): Boolean {
         if (!present.add(type to json)) return false
-        // Keep the item's identity when it has one that is free here. If the
-        // item was deleted on this device, it returns as a new item instead,
-        // or the old deletion would remove it again at the next sync.
-        val keepUid = uid.isNotEmpty() && dao.getByUid(uid) == null &&
-            dao.getTombstone(uid) == null
         dao.insert(
             VaultItemEntity(
-                uid = if (keepUid) uid else newUid(),
                 type = type,
                 payload = encrypt(json),
                 createdAt = createdAt,
@@ -240,8 +151,6 @@ class VaultRepository(private val dao: VaultDao) {
         )
         return true
     }
-
-    private fun newUid(): String = UUID.randomUUID().toString()
 
     private fun encrypt(json: String): ByteArray =
         CryptoEngine.encrypt(SessionManager.requireKey(), json.encodeToByteArray())

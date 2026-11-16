@@ -15,7 +15,6 @@ import com.perezfranco.balrog.security.DeterministicGenerator
 import com.perezfranco.balrog.importer.BitwardenImport
 import com.perezfranco.balrog.data.VaultItem
 import com.perezfranco.balrog.security.SessionManager
-import com.perezfranco.balrog.sync.SyncClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,7 +37,6 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     val keyManager get() = app.keyManager
     private val repository get() = app.repository
     val backupManager get() = app.backupManager
-    val syncManager get() = app.syncManager
 
     val isUnlocked: StateFlow<Boolean> = SessionManager.isUnlocked
 
@@ -111,7 +109,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     /** Moves everything in [old] to [new]; an empty [new] just removes the folder. */
     fun renameFolder(old: String, new: String) {
         viewModelScope.launch {
-            if (repository.renameFolder(old, new.trim()) > 0) app.onVaultChanged()
+            if (repository.renameFolder(old, new.trim()) > 0) backupManager.onVaultChanged()
             if (folderFilter.value == old) folderFilter.value = new.trim().ifEmpty { null }
         }
     }
@@ -208,7 +206,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun saveItem(item: VaultItem, onDone: () -> Unit = {}) {
         viewModelScope.launch {
             repository.saveItem(item)
-            app.onVaultChanged()
+            backupManager.onVaultChanged()
             onDone()
         }
     }
@@ -216,7 +214,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteItem(id: Long, onDone: () -> Unit = {}) {
         viewModelScope.launch {
             repository.deleteItem(id)
-            app.onVaultChanged()
+            backupManager.onVaultChanged()
             onDone()
         }
     }
@@ -249,68 +247,31 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
      * unlocked vault.
      */
     fun restoreBackup(source: Uri, password: CharArray, onResult: (BackupResult) -> Unit) {
-        restore(password, onResult) {
-            val stream = app.contentResolver.openInputStream(source)
-                ?: throw IOException("Cannot open the file")
-            stream.use { it.readNBytesCompat(MAX_BACKUP_BYTES + 1) }
-        }
-    }
-
-    /**
-     * Sets this device up from the vault on the sync server at [url], and
-     * turns sync on. For a new phone, or after a reinstall.
-     */
-    fun restoreFromServer(
-        url: String,
-        token: String,
-        password: CharArray,
-        onResult: (BackupResult) -> Unit,
-    ) {
-        restore(
-            password,
-            onResult = { result ->
-                if (result is BackupResult.Success) syncManager.enable(url, token)
-                onResult(result)
-            },
-        ) {
-            SyncClient(url, token).fetch().bytes
-                ?: throw VaultBackup.InvalidBackupException("There is no vault on the server yet")
-        }
-    }
-
-    private fun restore(
-        password: CharArray,
-        onResult: (BackupResult) -> Unit,
-        read: () -> ByteArray,
-    ) {
         viewModelScope.launch {
             val result = try {
                 withContext(Dispatchers.IO) {
-                    val bytes = read()
+                    val stream = app.contentResolver.openInputStream(source)
+                        ?: throw IOException("Cannot open the file")
+                    val bytes = stream.use { it.readNBytesCompat(MAX_BACKUP_BYTES + 1) }
                     if (bytes.size > MAX_BACKUP_BYTES) {
                         throw VaultBackup.InvalidBackupException("This is not a Balrog backup file")
                     }
                     val backup = VaultBackup.parse(bytes.decodeToString())
                     val backupKey = VaultBackup.open(backup, password)
-                    val fresh = !keyManager.vaultExists()
-                    if (fresh) {
+                    if (!keyManager.vaultExists()) {
                         keyManager.adoptVault(backup.keyMaterial)
                         SessionManager.unlock(backupKey)
                     }
                     val summary = repository.importRecords(backup.records, backupKey)
-                    // A fresh device also needs to know what was deleted.
-                    if (fresh) repository.adoptTombstones(backup.tombstones)
-                    if (summary.imported > 0) app.onVaultChanged()
+                    if (summary.imported > 0) backupManager.onVaultChanged()
                     BackupResult.Success(summary.imported, summary.skipped)
                 }
             } catch (e: VaultBackup.WrongPasswordException) {
                 BackupResult.WrongPassword
             } catch (e: VaultBackup.InvalidBackupException) {
                 BackupResult.Failure(e.message ?: "The backup file is damaged")
-            } catch (e: SyncClient.SyncException) {
-                BackupResult.Failure(e.message ?: "Could not reach the server")
             } catch (e: Exception) {
-                BackupResult.Failure("Could not read the backup")
+                BackupResult.Failure("Could not read the backup file")
             }
             password.fill('\u0000')
             onResult(result)
@@ -331,7 +292,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                     val summary = repository.importItems(
                         BitwardenImport.parse(bytes.decodeToString())
                     )
-                    if (summary.imported > 0) app.onVaultChanged()
+                    if (summary.imported > 0) backupManager.onVaultChanged()
                     BackupResult.Success(summary.imported, summary.skipped)
                 }
             } catch (e: BitwardenImport.ImportException) {
@@ -346,10 +307,8 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     /** Wipes every record and the key material — a factory reset of the vault. */
     fun destroyVault(onDone: () -> Unit) {
         viewModelScope.launch {
-            // First, so the emptied vault is never written over the backup or
-            // synced to the other devices.
+            // First, so the emptied vault is never written over the backup.
             backupManager.disableAutoBackup()
-            syncManager.disable()
             repository.deleteAll()
             keyManager.destroyVault()
             SessionManager.lock()

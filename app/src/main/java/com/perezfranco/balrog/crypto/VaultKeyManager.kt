@@ -61,7 +61,6 @@ class VaultKeyManager(context: Context) {
             .putString(KEY_SALT, encode(salt))
             .putInt(KEY_ITERATIONS, CryptoEngine.KDF_ITERATIONS)
             .putString(KEY_WRAPPED_DEK, encode(wrapped))
-            .putLong(KEY_KEY_UPDATED_AT, System.currentTimeMillis())
             .apply()
         val dek = SecretKeySpec(dekBytes, "AES")
         dekBytes.fill(0)
@@ -92,7 +91,6 @@ class VaultKeyManager(context: Context) {
             .putString(KEY_SALT, encode(salt))
             .putInt(KEY_ITERATIONS, CryptoEngine.KDF_ITERATIONS)
             .putString(KEY_WRAPPED_DEK, encode(wrapped))
-            .putLong(KEY_KEY_UPDATED_AT, System.currentTimeMillis())
             .apply()
         return true
     }
@@ -107,7 +105,6 @@ class VaultKeyManager(context: Context) {
             salt = decode(salt),
             iterations = prefs.getInt(KEY_ITERATIONS, CryptoEngine.KDF_ITERATIONS),
             wrappedDek = decode(wrapped),
-            updatedAt = prefs.getLong(KEY_KEY_UPDATED_AT, 0),
         )
     }
 
@@ -117,26 +114,10 @@ class VaultKeyManager(context: Context) {
      */
     fun adoptVault(material: VaultBackup.KeyMaterial) {
         check(!vaultExists()) { "Vault already exists" }
-        storeKeyMaterial(material)
-    }
-
-    /**
-     * Takes over key material that arrived by sync: the master password was
-     * changed on another device, and from now on this device opens with the
-     * new one too. Only call this with material from a vault file that
-     * verified against the vault key (see VaultBackup.verify).
-     */
-    fun replaceKeyMaterial(material: VaultBackup.KeyMaterial) {
-        check(vaultExists()) { "No vault" }
-        storeKeyMaterial(material)
-    }
-
-    private fun storeKeyMaterial(material: VaultBackup.KeyMaterial) {
         prefs.edit()
             .putString(KEY_SALT, encode(material.salt))
             .putInt(KEY_ITERATIONS, material.iterations)
             .putString(KEY_WRAPPED_DEK, encode(material.wrappedDek))
-            .putLong(KEY_KEY_UPDATED_AT, material.updatedAt)
             .apply()
     }
 
@@ -423,7 +404,6 @@ class VaultKeyManager(context: Context) {
         const val KEY_SALT = "kdf_salt"
         const val KEY_ITERATIONS = "kdf_iterations"
         const val KEY_WRAPPED_DEK = "wrapped_dek"
-        const val KEY_KEY_UPDATED_AT = "key_updated_at"
         const val KEY_BIOMETRIC_IV = "biometric_iv"
         const val KEY_BIOMETRIC_WRAPPED_DEK = "biometric_wrapped_dek"
         const val KEY_BIOMETRIC_MODE = "biometric_mode"
