@@ -46,12 +46,17 @@ if (!hash_equals(TOKEN, $given)) {
 }
 
 $dir = __DIR__ . '/balrog-data';
-$file = $dir . '/vault.balrog';
+$file = $dir . '/vault.php';
+$previous = $dir . '/vault.previous.php';
+
+// The vault is stored inside a PHP file that refuses to run, so that even
+// on a server that ignores .htaccess it cannot be downloaded directly.
+const GUARD = "<?php http_response_code(404); exit; ?>\n";
 
 if (!is_dir($dir) && !mkdir($dir, 0700)) {
     fail(500, 'Cannot create the data folder.');
 }
-// The vault is encrypted, but there is still no reason to serve it directly.
+// Belt and braces: also tell the web server not to serve this folder.
 if (!is_file($dir . '/.htaccess')) {
     file_put_contents(
         $dir . '/.htaccess',
@@ -67,7 +72,13 @@ if ($lock === false || !flock($lock, LOCK_EX)) {
     fail(500, 'Cannot lock the data folder.');
 }
 
-$current = is_file($file) ? file_get_contents($file) : null;
+$current = null;
+if (is_file($file)) {
+    $stored = file_get_contents($file);
+    if ($stored !== false && strncmp($stored, GUARD, strlen(GUARD)) === 0) {
+        $current = substr($stored, strlen(GUARD));
+    }
+}
 $revision = $current === null ? '' : hash('sha256', $current);
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -101,12 +112,12 @@ if ($method === 'POST') {
     // Write beside the target and rename, so a crash never leaves half a file;
     // keep the previous version as a safety net.
     $temp = $file . '.tmp';
-    if (file_put_contents($temp, $body) !== strlen($body)) {
+    if (file_put_contents($temp, GUARD . $body) !== strlen(GUARD) + strlen($body)) {
         @unlink($temp);
         fail(500, 'Cannot write the vault (disk full?).');
     }
     if ($current !== null) {
-        @copy($file, $dir . '/vault.previous.balrog');
+        @copy($file, $previous);
     }
     if (!rename($temp, $file)) {
         fail(500, 'Cannot replace the vault.');

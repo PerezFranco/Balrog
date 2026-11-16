@@ -157,8 +157,12 @@ class SyncTest {
         val remote = c.fetch()
         assertEquals("two", remote.bytes!!.decodeToString())
         assertEquals(second, remote.revision)
-        // The data folder is not served, and the previous version is kept.
-        assertEquals("one", File(root, "balrog-data/vault.previous.balrog").readText())
+        // The previous version is kept, and neither file can be downloaded
+        // directly: asking for one runs its guard instead of returning it.
+        assertTrue(File(root, "balrog-data/vault.previous.php").readText().endsWith("one"))
+        val direct = java.net.URL("http://127.0.0.1:$port/balrog-data/vault.php")
+            .openConnection() as java.net.HttpURLConnection
+        assertEquals(404, direct.responseCode)
     }
 
     @Test

@@ -33,9 +33,14 @@ fingerprint and face unlock, and two-factor codes built into each entry. *It sha
 - **Auto-lock** — the vault key is dropped after 60 s in the background
 - **Clipboard hygiene** — copies are flagged sensitive and cleared after 30 s
 - **Screenshot blocking** — `FLAG_SECURE` on every screen
-- **No cloud, no network** — Android cloud backup and device transfer are
-  excluded, and the app requests no internet permission; backups go only
-  where you put them. The camera permission is asked for
+- **Sync with your own website, and a web version** — an encrypted copy of
+  the vault on your own site keeps your devices in step and lets you use and
+  organise the vault from a computer's browser
+- **One-tap copy** — copy a username, password or two-factor code straight
+  from the list
+- **No third-party cloud** — Android cloud backup and device transfer are
+  excluded. The app uses the internet only if you turn on sync, and then
+  only to reach the address you give it. The camera permission is asked for
   only when you first scan a two-factor QR code.
 
 ## Security design
@@ -58,6 +63,8 @@ biometric ──▶ Android Keystore key (AES-256-GCM, auth-required) ───�
 - **No password hash is stored.** A wrong password simply fails GCM
   authentication when unwrapping the DEK.
 - Changing the master password re-wraps the DEK — no data re-encryption needed.
+- With sync on, the same wrapped DEK and encrypted records are also stored
+  on your website; nothing else is.
 - The unlocked DEK exists only in memory and is zeroed/dropped on lock,
   auto-lock, or process death.
 
@@ -133,6 +140,57 @@ version history (or an occasional manual backup) if you want older copies.
 - Biometric unlock is tied to the device and is not part of a backup; turn it
   on again after restoring.
 
+### Sync and the web version
+
+Balrog can keep the vault in step with an encrypted copy on **your own
+website**, which is also what the web version works from. The server is a
+dumb, untrusted store: it holds the same encrypted vault file a backup is,
+never sees your master password or anything readable, and only makes sure
+the caller knows a token and that one device cannot overwrite another's
+changes unseen.
+
+Setting it up (any host with PHP 7+, such as cPanel shared hosting):
+
+1. From the [latest release](../../releases/latest), download
+   `balrog-sync.php` and `balrog.html`.
+2. Open `balrog-sync.php` in a text editor and replace `CHANGE-ME` with a
+   long random token (Balrog's generator can make one: 40 letters and
+   numbers).
+3. Upload both files to a folder on your site, e.g. `public_html/balrog/`.
+   The site must be served over `https://`.
+4. In the phone app: Settings → Sync → enter the script's address
+   (`https://your-site/balrog/balrog-sync.php`) and the token.
+5. On a computer, open `https://your-site/balrog/balrog.html`, and enter the
+   token and your master password.
+
+How it behaves:
+
+- The phone syncs when the vault is unlocked and after every change. Each
+  item has a permanent id; the most recent edit of an item wins, deletions
+  spread, and an item edited after being deleted elsewhere comes back.
+- Changing the master password on the phone changes it everywhere at the
+  next sync.
+- The web version decrypts in the browser, using the browser's built-in
+  cryptography. It can search, copy usernames, passwords and two-factor
+  codes, add, edit and delete entries and notes, and file them into folders
+  (drag an entry onto a folder). It has no generator and does not show
+  Peppers. It locks after five minutes without activity.
+- A new phone, or a reinstall, can be set up with **Restore from your sync
+  server** on the first screen.
+
+What to be aware of:
+
+- Whoever obtains the encrypted file (your web host, or someone who breaks
+  into the site) can try master passwords against it at their leisure. The
+  token keeps strangers out, but the master password is what protects the
+  vault, so make it a long passphrase.
+- The web page is delivered by your site each time you open it. Someone who
+  can change files on your site could replace it with one that steals your
+  master password. Keep the hosting account secure, and prefer the phone if
+  you ever doubt the site.
+- Devices are merged by clock time, so a device with a badly wrong clock can
+  win or lose an edit it should not.
+
 ### Deterministic generator
 
 The generator's third tab derives a password from a recipe rather than from
@@ -187,7 +245,8 @@ Requires Android Studio (or the Android SDK + JDK 17). Then:
 - minSdk 26 (Android 8.0), targetSdk 34
 - Kotlin 2.0, Jetpack Compose (Material 3), Room, AndroidX Biometric
 
-Run the unit tests (crypto core, backups, Bitwarden import, two-factor codes, generators) with:
+Run the unit tests (crypto core, backups, sync against the real server script, Bitwarden
+import, two-factor codes, generators) with:
 
 ```sh
 ./gradlew test

@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<!-- Nothing is loaded from anywhere, and the page may only talk to its own site. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src data:; form-action 'none'; base-uri 'none'">
+<title>Balrog</title>
+<style>
+  :root {
+    --bg: #121212; --surface: #1e1b18; --raised: #2a2622; --line: #3a342e;
+    --text: #ece6df; --muted: #a59c92; --accent: #ff7a00; --on-accent: #000;
+    --danger: #ff6b5e; --ok: #7bd88f;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #faf7f3; --surface: #ffffff; --raised: #f1ebe4; --line: #ddd3c8;
+      --text: #221d18; --muted: #6f655b; --accent: #b35600; --on-accent: #fff;
+      --danger: #b3261e; --ok: #1f7a3a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  input, textarea {
+    width: 100%; padding: 8px 10px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 6px;
+  }
+  input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea { min-height: 110px; resize: vertical; }
+  label { display: block; margin: 12px 0 4px; color: var(--muted); font-size: 13px; }
+  button {
+    padding: 7px 12px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--raised); cursor: pointer; white-space: nowrap;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+  button.danger { color: var(--danger); }
+  button.small { padding: 3px 8px; font-size: 13px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .muted { color: var(--muted); }
+  .error { color: var(--danger); }
+  .hidden { display: none !important; }
+
+  #login { max-width: 380px; margin: 0 auto; padding: 12vh 20px 20px; }
+  #login h1 { font-size: 34px; margin: 0 0 4px; font-weight: 500; }
+  #login .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  #login .check input { width: auto; }
+  #login button { width: 100%; margin-top: 18px; padding: 10px; }
+
+  #app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+  header {
+    display: flex; gap: 10px; align-items: center; padding: 10px 14px;
+    border-bottom: 1px solid var(--line); background: var(--surface); flex-wrap: wrap;
+  }
+  header .brand { font-size: 20px; margin-right: 6px; }
+  header #search { flex: 1 1 180px; max-width: 420px; }
+  header #status { margin-left: auto; font-size: 13px; }
+  main { display: grid; grid-template-columns: 200px minmax(260px, 1fr) minmax(320px, 440px); min-height: 0; }
+  nav, #list, #detail { overflow-y: auto; min-height: 0; }
+  nav { border-right: 1px solid var(--line); padding: 10px 8px; }
+  nav h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 8px 4px; }
+  nav .item {
+    display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left;
+    padding: 6px 8px; border: 1px solid transparent; background: none; border-radius: 6px;
+  }
+  nav .item span:first-child { overflow: hidden; text-overflow: ellipsis; }
+  nav .item.active { background: var(--raised); border-color: var(--line); }
+  nav .item.drop { border-color: var(--accent); }
+  nav .count { color: var(--muted); font-size: 13px; }
+  #list { border-right: 1px solid var(--line); }
+  .row {
+    display: flex; gap: 8px; align-items: center; padding: 8px 12px;
+    border-bottom: 1px solid var(--line); cursor: pointer;
+  }
+  .row:hover, .row.active { background: var(--surface); }
+  .row .text { flex: 1; min-width: 0; }
+  .row .title, .row .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .sub { color: var(--muted); font-size: 13px; }
+  .empty { padding: 40px 20px; text-align: center; color: var(--muted); }
+  #detail { padding: 14px 16px 30px; }
+  #detail h2 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  .field { display: flex; gap: 6px; align-items: center; }
+  .field input { flex: 1; }
+  .actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .code { font-size: 22px; letter-spacing: .08em; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; grid-auto-rows: min-content; overflow-y: auto; }
+    nav, #list, #detail { overflow: visible; border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1>Balrog</h1>
+  <p class="muted">Your vault is decrypted in this browser only. Nothing readable is sent to the server.</p>
+  <label for="token">Sync token</label>
+  <input id="token" type="password" autocomplete="off" spellcheck="false">
+  <div class="check">
+    <input id="remember" type="checkbox">
+    <label for="remember" style="margin:0">Remember the token on this computer</label>
+  </div>
+  <label for="password">Master password</label>
+  <input id="password" type="password" autocomplete="off">
+  <button id="unlock" class="primary">Unlock</button>
+  <p id="loginError" class="error" role="alert"></p>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <span class="brand">Balrog</span>
+    <input id="search" type="search" placeholder="Search" autocomplete="off">
+    <button id="newPassword">+ Password</button>
+    <button id="newNote">+ Note</button>
+    <span id="status" class="muted" role="status"></span>
+    <button id="lock">Lock</button>
+  </header>
+  <main>
+    <nav id="nav"></nav>
+    <section id="list"></section>
+    <section id="detail"></section>
+  </main>
+</div>
+
+<script>
+"use strict";
+/*
+ * Balrog for the browser. One self-contained page that sits next to
+ * balrog-sync.php. It reads and writes the same encrypted vault file as the
+ * Android app (see VaultBackup.kt for the format, VaultMerge.kt for the
+ * rules) using the browser's built-in cryptography.
+ *
+ * Security notes for whoever edits this:
+ *  - Vault data is only ever put into the page with textContent / .value,
+ *    never as HTML.
+ *  - The master password and vault key live in memory only and are dropped
+ *    on lock, on inactivity, and when the page closes.
+ */
+
+const SYNC_URL = "balrog-sync.php";
+const AUTO_LOCK_MS = 5 * 60 * 1000;
+const CLIPBOARD_CLEAR_MS = 30 * 1000;
+const REFRESH_MS = 60 * 1000;
+
+const $ = (id) => document.getElementById(id);
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+// ---- Small helpers ---------------------------------------------------------
+
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "text") el.textContent = v;
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children.flat()) {
+    if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+
+const b64 = (bytes) => {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+const unb64 = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+
+function concat(parts) {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
+}
+
+function sameBytes(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
+function newUid() {
+  return crypto.randomUUID ? crypto.randomUUID()
+    : Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ---- Cryptography (mirrors CryptoEngine.kt / VaultBackup.kt) ----------------
+
+async function deriveKek(password, salt, iterations) {
+  const base = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+}
+
+/** Blobs are IV (12 bytes) || ciphertext+tag. */
+async function decrypt(key, blob) {
+  if (blob.length <= 12) throw new Error("blob too short");
+  return new Uint8Array(await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: blob.subarray(0, 12), tagLength: 128 }, key, blob.subarray(12)));
+}
+
+async function encrypt(key, plain) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, tagLength: 128 }, key, plain));
+  return concat([iv, ct]);
+}
+
+/** SHA-256 over the file's contents; must match VaultBackup.digest exactly. */
+async function digest(file) {
+  const parts = [];
+  const putInt = (n) => parts.push(new Uint8Array([n >>> 24, n >>> 16, n >>> 8, n].map((x) => x & 0xff)));
+  const putLong = (n) => { putInt(Math.floor(n / 4294967296)); putInt(n >>> 0); };
+  const putBytes = (bytes) => { putInt(bytes.length); parts.push(bytes); };
+  const v2 = file.version >= 2;
+  if (v2) {
+    putBytes(enc.encode("balrog-v2"));
+    putBytes(file.key.salt);
+    putInt(file.key.iterations);
+    putBytes(file.key.wrappedDek);
+    putLong(file.key.updatedAt);
+  }
+  putInt(file.records.length);
+  for (const r of file.records) {
+    if (v2) putBytes(enc.encode(r.uid));
+    putBytes(enc.encode(r.type));
+    putLong(r.createdAt);
+    putLong(r.updatedAt);
+    putBytes(r.payload);
+  }
+  if (v2) {
+    putInt(file.tombstones.length);
+    for (const t of file.tombstones) { putBytes(enc.encode(t.uid)); putLong(t.deletedAt); }
+  }
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", concat(parts)));
+}
+
+function parseFile(text) {
+  let root;
+  try { root = JSON.parse(text); } catch (e) { throw new Error("The server's vault file is damaged."); }
+  if (root.format !== "balrog-backup") throw new Error("The server's file is not a Balrog vault.");
+  if (root.version > 2) throw new Error("This vault was written by a newer Balrog. Update this page.");
+  if (root.version < 2) throw new Error("This vault predates sync. Sync it once from the phone app (1.5 or newer).");
+  return {
+    version: root.version,
+    key: {
+      salt: unb64(root.kdf.salt), iterations: root.kdf.iterations,
+      wrappedDek: unb64(root.wrappedKey), updatedAt: root.keyUpdatedAt || 0,
+    },
+    records: root.items.map((i) => ({
+      uid: i.uid, type: i.type, payload: unb64(i.payload), createdAt: i.createdAt, updatedAt: i.updatedAt,
+    })),
+    tombstones: (root.deleted || []).map((d) => ({ uid: d.uid, deletedAt: d.deletedAt })),
+    seal: unb64(root.seal),
+  };
+}
+
+async function verifyFile(file, dek) {
+  let sealed = null;
+  try { sealed = await decrypt(dek, file.seal); } catch (e) { /* wrong key or altered */ }
+  if (!sealed || !sameBytes(sealed, await digest(file))) {
+    throw new Error("The vault on the server does not verify. It may have been altered, or belongs to another vault.");
+  }
+}
+
+async function encodeFile(file, dek) {
+  const seal = await encrypt(dek, await digest(file));
+  return JSON.stringify({
+    format: "balrog-backup", version: 2, createdAt: Date.now(),
+    kdf: { algorithm: "PBKDF2-HMAC-SHA256", salt: b64(file.key.salt), iterations: file.key.iterations },
+    wrappedKey: b64(file.key.wrappedDek),
+    keyUpdatedAt: file.key.updatedAt,
+    seal: b64(seal),
+    items: file.records.map((r) => ({
+      uid: r.uid, type: r.type, payload: b64(r.payload), createdAt: r.createdAt, updatedAt: r.updatedAt,
+    })),
+    deleted: file.tombstones.map((t) => ({ uid: t.uid, deletedAt: t.deletedAt })),
+  });
+}
+
+// ---- Two-factor codes (mirrors Totp.kt) --------------------------------------
+
+function base32Decode(text) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const clean = text.toUpperCase().replace(/[\s=-]/g, "");
+  const out = [];
+  let buffer = 0, bits = 0;
+  for (const c of clean) {
+    const v = alphabet.indexOf(c);
+    if (v < 0) throw new Error("Setup keys only contain the letters A–Z and the digits 2–7.");
+    buffer = (buffer << 5) | v; bits += 5;
+    if (bits >= 8) { bits -= 8; out.push((buffer >> bits) & 0xff); buffer &= (1 << bits) - 1; }
+  }
+  if (!out.length) throw new Error("That setup key is too short.");
+  return new Uint8Array(out);
+}
+
+/** Accepts an otpauth://totp/ link or a bare setup key. */
+function parseTotp(input) {
+  const text = input.trim();
+  if (!text) throw new Error("Enter a setup key.");
+  const config = { secret: "", algorithm: "SHA1", digits: 6, period: 30, issuer: "", account: "" };
+  if (/^otpauth:\/\//i.test(text)) {
+    if (!/^otpauth:\/\/totp\//i.test(text)) throw new Error("Only time-based (TOTP) codes are supported.");
+    const query = new URLSearchParams(text.includes("?") ? text.slice(text.indexOf("?") + 1).replace(/\+/g, "%2B") : "");
+    const get = (name) => { for (const [k, v] of query) if (k.toLowerCase() === name) return v; return null; };
+    config.secret = get("secret") || "";
+    const algorithm = (get("algorithm") || "SHA1").toUpperCase().replace("-", "");
+    if (!["SHA1", "SHA256", "SHA512"].includes(algorithm)) throw new Error("Unsupported algorithm: " + algorithm);
+    config.algorithm = algorithm;
+    config.digits = parseInt(get("digits") || "6", 10);
+    config.period = parseInt(get("period") || "30", 10);
+    if (!(config.digits >= 6 && config.digits <= 8)) throw new Error("Unsupported code length.");
+    if (!(config.period >= 1 && config.period <= 3600)) throw new Error("Unsupported period.");
+    const label = decodeURIComponent(text.slice(text.toLowerCase().indexOf("totp/") + 5).split("?")[0]);
+    const colon = label.indexOf(":");
+    config.account = (colon < 0 ? label : label.slice(colon + 1)).trim();
+    config.issuer = (get("issuer") || (colon < 0 ? "" : label.slice(0, colon))).trim();
+  } else {
+    config.secret = text;
+  }
+  config.secret = config.secret.toUpperCase().replace(/[\s=-]/g, "");
+  base32Decode(config.secret); // validates
+  return config;
+}
+
+/** The canonical otpauth URI, as Totp.Config.toUri() writes it. */
+function totpToUri(c) {
+  const e = (s) => encodeURIComponent(s).replace(/[!'()*]/g, (ch) => "%" + ch.charCodeAt(0).toString(16).toUpperCase());
+  const label = c.issuer && c.account ? c.issuer + ":" + c.account : (c.account || c.issuer);
+  return "otpauth://totp/" + e(label) + "?secret=" + c.secret + (c.issuer ? "&issuer=" + e(c.issuer) : "") +
+    "&algorithm=" + c.algorithm + "&digits=" + c.digits + "&period=" + c.period;
+}
+
+async function totpCode(config, now) {
+  const counter = Math.floor(now / 1000 / config.period);
+  const message = new Uint8Array(8);
+  new DataView(message.buffer).setUint32(0, Math.floor(counter / 4294967296));
+  new DataView(message.buffer).setUint32(4, counter >>> 0);
+  const hash = { SHA1: "SHA-1", SHA256: "SHA-256", SHA512: "SHA-512" }[config.algorithm];
+  const key = await crypto.subtle.importKey("raw", base32Decode(config.secret), { name: "HMAC", hash }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, message));
+  const offset = mac[mac.length - 1] & 0x0f;
+  const binary = ((mac[offset] & 0x7f) * 16777216) + (mac[offset + 1] << 16) + (mac[offset + 2] << 8) + mac[offset + 3];
+  return String(binary % 10 ** config.digits).padStart(config.digits, "0");
+}
+
+// ---- Server ------------------------------------------------------------------
+
+async function request(method, token, body, base) {
+  const headers = { "X-Balrog-Token": token };
+  if (base != null) headers["X-Balrog-Base"] = base;
+  let response;
+  try {
+    response = await fetch(SYNC_URL, { method, headers, body, cache: "no-store", credentials: "omit" });
+  } catch (e) {
+    throw new Error("Could not reach the server.");
+  }
+  if (response.status === 401 || response.status === 403) throw new Error("The server rejected the sync token.");
+  if (response.status === 503) throw new Error("The sync script has no token set yet.");
+  return response;
+}
+
+// ---- Vault state ---------------------------------------------------------------
+
+/** Everything known while unlocked; null when locked. */
+let vault = null;
+let view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null };
+let lockTimer = null, refreshTimer = null, clipboardTimer = null, codeTimer = null;
+
+async function loadFromServer(token, dek, password) {
+  const response = await request("GET", token);
+  if (response.status === 204 || response.status === 404) {
+    throw new Error("There is no vault on the server yet. Turn on sync in the phone app first.");
+  }
+  if (!response.ok) throw new Error("The server answered with error " + response.status + ".");
+  const revision = response.headers.get("X-Balrog-Revision") || "";
+  const file = parseFile(await response.text());
+  if (!dek) {
+    const kek = await deriveKek(password, file.key.salt, file.key.iterations);
+    let raw;
+    try { raw = await decrypt(kek, file.key.wrappedDek); } catch (e) { throw new Error("Wrong master password."); }
+    dek = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
+    raw.fill(0);
+  }
+  await verifyFile(file, dek);
+  const items = new Map();
+  for (const r of file.records) {
+    try { items.set(r.uid, JSON.parse(dec.decode(await decrypt(dek, r.payload)))); } catch (e) { /* unreadable: left alone */ }
+  }
+  return { token, dek, revision, file, items };
+}
+
+/**
+ * Applies [change] to the vault and stores it. If another device stored
+ * something in the meantime, fetches that, re-applies the change on top,
+ * and tries again — so nothing made elsewhere is overwritten.
+ */
+async function commit(change) {
+  setStatus("Saving…");
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const file = {
+      version: 2, key: vault.file.key,
+      records: vault.file.records.slice(), tombstones: vault.file.tombstones.slice(),
+    };
+    const items = new Map(vault.items);
+    await change(file, items);
+    const body = await encodeFile(file, vault.dek);
+    const response = await request("POST", vault.token, body, vault.revision);
+    if (response.ok) {
+      vault.file = file; vault.items = items;
+      vault.revision = response.headers.get("X-Balrog-Revision") || "";
+      setStatus("Saved " + new Date().toLocaleTimeString());
+      return;
+    }
+    if (response.status !== 409) throw new Error("The server answered with error " + response.status + ".");
+    vault = { ...vault, ...(await loadFromServer(vault.token, vault.dek)) };
+  }
+  throw new Error("The server is busy. Try again in a moment.");
+}
+
+async function putItem(file, items, uid, type, json) {
+  const now = Date.now();
+  const at = file.records.findIndex((r) => r.uid === uid);
+  const old = at >= 0 ? file.records[at] : null;
+  const record = {
+    uid, type, payload: await encrypt(vault.dek, enc.encode(JSON.stringify(json))),
+    createdAt: old ? old.createdAt : now,
+    updatedAt: old ? Math.max(now, old.updatedAt + 1) : now,
+  };
+  if (old) file.records[at] = record; else file.records.push(record);
+  file.tombstones = file.tombstones.filter((t) => t.uid !== uid);
+  items.set(uid, json);
+}
+
+function removeItem(file, items, uid) {
+  file.records = file.records.filter((r) => r.uid !== uid);
+  file.tombstones = file.tombstones.filter((t) => t.uid !== uid).concat({ uid, deletedAt: Date.now() });
+  items.delete(uid);
+}
+
+async function refresh() {
+  if (!vault || view.draft) return; // never pull the rug from under an edit
+  try {
+    const response = await request("GET", vault.token);
+    if (response.ok && (response.headers.get("X-Balrog-Revision") || "") !== vault.revision) {
+      vault = { ...vault, ...(await loadFromServer(vault.token, vault.dek)) };
+      setStatus("Updated " + new Date().toLocaleTimeString());
+      render();
+    }
+  } catch (e) { setStatus(e.message, true); }
+}
+
+// ---- Lock / unlock ----------------------------------------------------------------
+
+function lock(message) {
+  vault = null;
+  view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null };
+  clearTimeout(lockTimer); clearInterval(refreshTimer); clearInterval(codeTimer);
+  $("app").classList.add("hidden");
+  $("login").classList.remove("hidden");
+  $("nav").replaceChildren(); $("list").replaceChildren(); $("detail").replaceChildren();
+  $("search").value = "";
+  $("password").value = "";
+  $("loginError").textContent = message || "";
+  $("password").focus();
+}
+
+function touch() {
+  if (!vault) return;
+  clearTimeout(lockTimer);
+  lockTimer = setTimeout(() => lock("Locked after 5 minutes without activity."), AUTO_LOCK_MS);
+}
+
+async function unlock() {
+  const token = $("token").value.trim();
+  const password = $("password").value;
+  if (!token || !password) { $("loginError").textContent = "Enter the sync token and your master password."; return; }
+  $("unlock").disabled = true;
+  $("unlock").textContent = "Unlocking…";
+  $("loginError").textContent = "";
+  try {
+    vault = await loadFromServer(token, null, password);
+    try {
+      if ($("remember").checked) localStorage.setItem("balrog.token", token);
+      else localStorage.removeItem("balrog.token");
+    } catch (e) { /* storage unavailable: just don't remember */ }
+    $("password").value = "";
+    $("login").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    setStatus("In sync");
+    refreshTimer = setInterval(refresh, REFRESH_MS);
+    touch();
+    render();
+    $("search").focus();
+  } catch (e) {
+    vault = null;
+    $("loginError").textContent = e.message;
+  } finally {
+    $("unlock").disabled = false;
+    $("unlock").textContent = "Unlock";
+  }
+}
+
+function setStatus(text, isError) {
+  $("status").textContent = text;
+  $("status").className = isError ? "error" : "muted";
+}
+
+async function copy(what, value) {
+  try {
+    await navigator.clipboard.writeText(value);
+    setStatus(what + " copied — clears in 30 s");
+    clearTimeout(clipboardTimer);
+    clipboardTimer = setTimeout(() => navigator.clipboard.writeText("").catch(() => {}), CLIPBOARD_CLEAR_MS);
+  } catch (e) {
+    setStatus("The browser blocked copying.", true);
+  }
+}
+
+// ---- Rendering -------------------------------------------------------------------------
+
+const typeOf = (uid) => vault.file.records.find((r) => r.uid === uid).type;
+
+function entries(type) {
+  return vault.file.records
+    .filter((r) => r.type === type && vault.items.has(r.uid))
+    .map((r) => ({ uid: r.uid, ...vault.items.get(r.uid) }))
+    .sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" }));
+}
+
+function folders() {
+  const names = new Set();
+  for (const r of vault.file.records) {
+    const item = vault.items.get(r.uid);
+    if (item && r.type !== "PEPPER" && item.folder) names.add(item.folder);
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+function visible() {
+  const q = view.query.trim().toLowerCase();
+  return entries(view.type).filter((e) =>
+    (view.folder === null || (e.folder || "") === view.folder) &&
+    (!q || [e.title, e.username, e.url].some((v) => (v || "").toLowerCase().includes(q))));
+}
+
+function render() {
+  renderNav(); renderList(); renderDetail();
+}
+
+function renderNav() {
+  const all = entries(view.type);
+  const count = (folder) => all.filter((e) => folder === null || (e.folder || "") === folder).length;
+  const names = folders();
+  if (view.folder && !names.includes(view.folder)) view.folder = null;
+
+  const typeButton = (type, label) => h("button", {
+    class: "item" + (view.type === type ? " active" : ""),
+    onclick: () => { view.type = type; view.selected = null; view.draft = null; render(); },
+  }, h("span", { text: label }), h("span", { class: "count", text: entries(type).length }));
+
+  const folderButton = (folder, label) => {
+    const el = h("button", {
+      class: "item" + (view.folder === folder ? " active" : ""),
+      onclick: () => { view.folder = folder; render(); },
+    }, h("span", { text: label }), h("span", { class: "count", text: count(folder) }));
+    if (folder !== null) {
+      // Drop an entry here to file it under this folder.
+      el.addEventListener("dragover", (e) => { e.preventDefault(); el.classList.add("drop"); });
+      el.addEventListener("dragleave", () => el.classList.remove("drop"));
+      el.addEventListener("drop", (e) => {
+        e.preventDefault(); el.classList.remove("drop");
+        const uid = e.dataTransfer.getData("text/plain");
+        if (vault.items.has(uid)) moveToFolder([uid], folder);
+      });
+    }
+    return el;
+  };
+
+  $("nav").replaceChildren(
+    h("h2", { text: "Show" }),
+    typeButton("PASSWORD", "Passwords"), typeButton("NOTE", "Notes"),
+    h("h2", { text: "Folders" }),
+    folderButton(null, "All"),
+    ...names.map((n) => folderButton(n, n)),
+    folderButton("", "No folder"),
+    h("div", { style: "padding:10px 8px" },
+      h("button", { class: "small", onclick: newFolder }, "+ New folder"),
+      view.folder ? h("button", { class: "small", style: "margin-left:6px", onclick: renameFolder }, "Rename") : null,
+      h("p", { class: "muted", style: "font-size:12px" }, "Drag an entry onto a folder to move it.")));
+}
+
+function renderList() {
+  const rows = visible().map((e) => {
+    const buttons = [];
+    if (view.type === "PASSWORD") {
+      if (e.totp) buttons.push(h("button", { class: "small", title: "Copy two-factor code", onclick: async (ev) => {
+        ev.stopPropagation();
+        try { copy("Code", await totpCode(parseTotp(e.totp), Date.now())); } catch (err) { setStatus(err.message, true); }
+      } }, "2FA"));
+      if (e.username) buttons.push(h("button", { class: "small", title: "Copy username", onclick: (ev) => { ev.stopPropagation(); copy("Username", e.username); } }, "User"));
+      buttons.push(h("button", { class: "small", title: "Copy password", onclick: (ev) => { ev.stopPropagation(); copy("Password", e.password || ""); } }, "Pass"));
+    }
+    return h("div", {
+      class: "row" + (view.selected === e.uid ? " active" : ""), draggable: "true",
+      ondragstart: (ev) => ev.dataTransfer.setData("text/plain", e.uid),
+      onclick: () => select(e.uid),
+    },
+    h("div", { class: "text" },
+      h("div", { class: "title", text: e.title || "(untitled)" }),
+      h("div", { class: "sub", text: view.type === "PASSWORD" ? (e.username || "") : (e.folder || "") })),
+    ...buttons);
+  });
+  $("list").replaceChildren(...(rows.length ? rows : [h("div", { class: "empty", text:
+    view.query ? "Nothing matches." : "Nothing here yet." })]));
+}
+
+function select(uid) {
+  view.selected = uid;
+  view.draft = null;
+  render();
+}
+
+function startNew(type) {
+  view.type = type;
+  view.selected = null;
+  view.draft = type === "PASSWORD"
+    ? { uid: null, type, title: "", username: "", password: "", url: "", notes: "", totp: "", folder: view.folder || "" }
+    : { uid: null, type, title: "", body: "", folder: view.folder || "" };
+  render();
+}
+
+function renderDetail() {
+  clearInterval(codeTimer);
+  const detail = $("detail");
+  let item = view.draft;
+  if (!item && view.selected && vault.items.has(view.selected)) {
+    item = { uid: view.selected, type: typeOf(view.selected), ...vault.items.get(view.selected) };
+  }
+  if (!item) { detail.replaceChildren(h("div", { class: "empty", text: "Select an entry, or add one." })); return; }
+
+  const isPassword = item.type === "PASSWORD";
+  const input = (value, attrs) => h("input", { value: value || "", autocomplete: "off", spellcheck: "false", ...attrs });
+  const title = input(item.title);
+  const folder = input(item.folder, { list: "folderNames", placeholder: "None" });
+  const error = h("p", { class: "error", role: "alert" });
+  const fields = [h("label", {}, "Title"), title];
+  let read;
+
+  if (isPassword) {
+    const username = input(item.username);
+    const password = input(item.password, { type: "password", class: "mono" });
+    const url = input(item.url, { inputmode: "url" });
+    const totp = input(item.totp ? parseTotpSafe(item.totp).secret : "", { class: "mono", placeholder: "Setup key or otpauth:// link" });
+    const notes = h("textarea", {}); notes.value = item.notes || "";
+    const code = h("span", { class: "mono code" });
+    const codeRow = h("div", { class: "field", style: "margin-top:6px" }, code,
+      h("button", { class: "small", onclick: () => copy("Code", code.dataset.value || "") }, "Copy"));
+    const showCode = async () => {
+      try {
+        const c = parseTotp(totp.value);
+        const now = Date.now();
+        code.dataset.value = await totpCode(c, now);
+        code.textContent = code.dataset.value + "  (" + (c.period - Math.floor(now / 1000) % c.period) + " s)";
+        codeRow.classList.remove("hidden");
+      } catch (e) { codeRow.classList.add("hidden"); }
+    };
+    totp.addEventListener("input", showCode);
+    showCode();
+    codeTimer = setInterval(showCode, 1000);
+
+    fields.push(
+      h("label", {}, "Username / email"),
+      h("div", { class: "field" }, username, h("button", { class: "small", onclick: () => copy("Username", username.value) }, "Copy")),
+      h("label", {}, "Password"),
+      h("div", { class: "field" }, password,
+        h("button", { class: "small", onclick: (ev) => {
+          password.type = password.type === "password" ? "text" : "password";
+          ev.target.textContent = password.type === "password" ? "Show" : "Hide";
+        } }, "Show"),
+        h("button", { class: "small", onclick: () => copy("Password", password.value) }, "Copy")),
+      h("label", {}, "Website"), url,
+      h("label", {}, "Two-factor setup key"), totp, codeRow,
+      h("label", {}, "Folder"), folder,
+      h("label", {}, "Notes"), notes);
+    read = () => {
+      const next = { ...stripMeta(item), title: title.value, username: username.value, password: password.value,
+        url: url.value, notes: notes.value, folder: folder.value.trim() };
+      // A changed password no longer comes from its saved recipe.
+      if (next.recipe && password.value !== item.password) next.recipe = "";
+      const key = totp.value.trim();
+      if (!key) next.totp = "";
+      else if (!item.totp || parseTotpSafe(item.totp).secret !== key.toUpperCase().replace(/[\s=-]/g, "")) {
+        next.totp = totpToUri(parseTotp(key)); // throws with a readable message
+      }
+      return next;
+    };
+  } else {
+    const body = h("textarea", { style: "min-height:260px" }); body.value = item.body || "";
+    fields.push(h("label", {}, "Note"), body, h("label", {}, "Folder"), folder);
+    read = () => ({ ...stripMeta(item), title: title.value, body: body.value, folder: folder.value.trim() });
+  }
+
+  const save = h("button", { class: "primary", onclick: async () => {
+    let next;
+    try { next = read(); } catch (e) { error.textContent = e.message; return; }
+    const uid = item.uid || newUid();
+    save.disabled = true;
+    try {
+      await commit((file, items) => putItem(file, items, uid, item.type, next));
+      view.draft = null; view.selected = uid;
+      render();
+    } catch (e) { error.textContent = e.message; setStatus(e.message, true); save.disabled = false; }
+  } }, "Save");
+
+  const remove = item.uid ? h("button", { class: "danger", onclick: async () => {
+    if (!confirm('Delete "' + (item.title || "(untitled)") + '"? It will be deleted on your phone too.')) return;
+    try {
+      await commit((file, items) => removeItem(file, items, item.uid));
+      view.selected = null;
+      render();
+    } catch (e) { error.textContent = e.message; setStatus(e.message, true); }
+  } }, "Delete") : null;
+
+  detail.replaceChildren(
+    h("h2", { text: item.uid ? (isPassword ? "Password" : "Note") : (isPassword ? "New password" : "New note") }),
+    h("datalist", { id: "folderNames" }, ...folders().map((n) => h("option", { value: n }))),
+    ...fields,
+    h("div", { class: "actions" }, save,
+      h("button", { onclick: () => { view.draft = null; if (!item.uid) view.selected = null; render(); } }, item.uid ? "Revert" : "Cancel"),
+      remove),
+    error);
+  // Editing an existing entry counts as a draft too, so a background refresh
+  // does not replace what is being typed.
+  detail.oninput = () => { if (!view.draft) view.draft = item; };
+  if (!item.uid) title.focus();
+}
+
+const stripMeta = ({ uid, type, ...rest }) => rest;
+function parseTotpSafe(value) { try { return parseTotp(value); } catch (e) { return { secret: "" }; } }
+
+async function moveToFolder(uids, folder) {
+  try {
+    await commit(async (file, items) => {
+      for (const uid of uids) {
+        const item = items.get(uid);
+        const record = file.records.find((r) => r.uid === uid);
+        if (item && record && (item.folder || "") !== folder) {
+          await putItem(file, items, uid, record.type, { ...item, folder });
+        }
+      }
+    });
+  } catch (e) { setStatus(e.message, true); }
+  render();
+}
+
+function newFolder() {
+  const name = (prompt("Name of the new folder. It appears once an entry is in it — the selected entry is moved there now.") || "").trim();
+  if (!name) return;
+  if (view.selected) moveToFolder([view.selected], name).then(() => { view.folder = name; render(); });
+  else setStatus("Select an entry first, then create the folder for it.", true);
+}
+
+function renameFolder() {
+  const old = view.folder;
+  const name = prompt('Rename folder "' + old + '" (leave empty to remove the folder and keep its entries):', old);
+  if (name === null || name.trim() === old) return;
+  const uids = vault.file.records
+    .filter((r) => r.type !== "PEPPER" && vault.items.has(r.uid) && (vault.items.get(r.uid).folder || "") === old)
+    .map((r) => r.uid);
+  moveToFolder(uids, name.trim()).then(() => { view.folder = name.trim() || null; render(); });
+}
+
+// ---- Wiring ---------------------------------------------------------------------------------
+
+$("unlock").addEventListener("click", unlock);
+$("password").addEventListener("keydown", (e) => { if (e.key === "Enter") unlock(); });
+$("lock").addEventListener("click", () => lock());
+$("search").addEventListener("input", (e) => { view.query = e.target.value; renderList(); });
+$("newPassword").addEventListener("click", () => startNew("PASSWORD"));
+$("newNote").addEventListener("click", () => startNew("NOTE"));
+for (const type of ["pointerdown", "keydown", "wheel"]) document.addEventListener(type, touch, { passive: true });
+window.addEventListener("focus", refresh);
+
+try {
+  const saved = localStorage.getItem("balrog.token");
+  if (saved) { $("token").value = saved; $("remember").checked = true; $("password").focus(); }
+} catch (e) { /* storage unavailable */ }
+if (!window.isSecureContext) {
+  $("loginError").textContent = "Open this page over https:// — browsers only allow encryption on secure pages.";
+}
+</script>
+</body>
+</html>
