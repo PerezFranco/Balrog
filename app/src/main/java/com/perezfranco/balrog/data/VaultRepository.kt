@@ -8,13 +8,13 @@ import kotlinx.coroutines.flow.map
 import java.security.GeneralSecurityException
 import javax.crypto.SecretKey
 
+/** Outcome of an import: items added, and items skipped as already present. */
+data class ImportSummary(val imported: Int, val skipped: Int)
+
 /**
  * Encrypts vault items on the way into Room and decrypts them on the way out,
  * using the session's in-memory vault key.
  */
-/** Outcome of [VaultRepository.importRecords]. */
-data class ImportSummary(val imported: Int, val skipped: Int)
-
 class VaultRepository(private val dao: VaultDao) {
 
     /** All items, decrypted. Records that fail authentication are dropped. */
@@ -68,15 +68,8 @@ class VaultRepository(private val dao: VaultDao) {
         records: List<VaultBackup.Record>,
         backupKey: SecretKey,
     ): ImportSummary {
-        val sessionKey = SessionManager.requireKey()
         val known = ItemType.entries.map { it.name }
-        val present = dao.getAll().mapNotNullTo(HashSet()) { entity ->
-            try {
-                entity.type to CryptoEngine.decrypt(sessionKey, entity.payload).decodeToString()
-            } catch (e: GeneralSecurityException) {
-                null
-            }
-        }
+        val present = presentItems(SessionManager.requireKey())
         var imported = 0
         var skipped = 0
         for (record in records) {
@@ -84,22 +77,64 @@ class VaultRepository(private val dao: VaultDao) {
                 skipped++
                 continue
             }
-            val json = CryptoEngine.decrypt(backupKey, record.payload)
-            if (!present.add(record.type to json.decodeToString())) {
+            val json = CryptoEngine.decrypt(backupKey, record.payload).decodeToString()
+            if (insertIfNew(present, record.type, json, record.createdAt, record.updatedAt)) {
+                imported++
+            } else {
                 skipped++
-                continue
             }
-            dao.insert(
-                VaultItemEntity(
-                    type = record.type,
-                    payload = CryptoEngine.encrypt(sessionKey, json),
-                    createdAt = record.createdAt,
-                    updatedAt = record.updatedAt,
-                )
-            )
-            imported++
         }
         return ImportSummary(imported, skipped)
+    }
+
+    /**
+     * Adds items read from another password manager's export. Items identical
+     * to ones already in the vault are skipped, so importing the same file
+     * twice is harmless.
+     */
+    suspend fun importItems(items: List<VaultItem>): ImportSummary {
+        val present = presentItems(SessionManager.requireKey())
+        val now = System.currentTimeMillis()
+        var imported = 0
+        for (item in items) {
+            val type = when (item) {
+                is PasswordEntry -> ItemType.PASSWORD
+                is SecureNote -> ItemType.NOTE
+            }
+            val created = item.createdAt.takeIf { it > 0 } ?: now
+            val updated = item.updatedAt.takeIf { it > 0 } ?: created
+            if (insertIfNew(present, type.name, item.toPayloadJson(), created, updated)) imported++
+        }
+        return ImportSummary(imported, items.size - imported)
+    }
+
+    /** (type, plaintext JSON) of everything in the vault, for duplicate checks. */
+    private suspend fun presentItems(key: SecretKey): MutableSet<Pair<String, String>> =
+        dao.getAll().mapNotNullTo(HashSet()) { entity ->
+            try {
+                entity.type to CryptoEngine.decrypt(key, entity.payload).decodeToString()
+            } catch (e: GeneralSecurityException) {
+                null
+            }
+        }
+
+    private suspend fun insertIfNew(
+        present: MutableSet<Pair<String, String>>,
+        type: String,
+        json: String,
+        createdAt: Long,
+        updatedAt: Long,
+    ): Boolean {
+        if (!present.add(type to json)) return false
+        dao.insert(
+            VaultItemEntity(
+                type = type,
+                payload = encrypt(json),
+                createdAt = createdAt,
+                updatedAt = updatedAt,
+            )
+        )
+        return true
     }
 
     private fun encrypt(json: String): ByteArray =

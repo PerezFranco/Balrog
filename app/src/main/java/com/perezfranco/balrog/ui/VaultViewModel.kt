@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.perezfranco.balrog.BalrogApplication
 import com.perezfranco.balrog.crypto.VaultBackup
 import com.perezfranco.balrog.data.PasswordEntry
+import com.perezfranco.balrog.importer.BitwardenImport
 import com.perezfranco.balrog.data.VaultItem
 import com.perezfranco.balrog.security.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -173,6 +174,32 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 BackupResult.Failure("Could not read the backup file")
             }
             password.fill('\u0000')
+            onResult(result)
+        }
+    }
+
+    /** Imports a Bitwarden export file (.json or .csv) into the unlocked vault. */
+    fun importBitwarden(source: Uri, onResult: (BackupResult) -> Unit) {
+        viewModelScope.launch {
+            val result = try {
+                withContext(Dispatchers.IO) {
+                    val stream = app.contentResolver.openInputStream(source)
+                        ?: throw IOException("Cannot open the file")
+                    val bytes = stream.use { it.readNBytesCompat(MAX_BACKUP_BYTES + 1) }
+                    if (bytes.size > MAX_BACKUP_BYTES) {
+                        throw BitwardenImport.ImportException("This file is too large")
+                    }
+                    val summary = repository.importItems(
+                        BitwardenImport.parse(bytes.decodeToString())
+                    )
+                    if (summary.imported > 0) backupManager.onVaultChanged()
+                    BackupResult.Success(summary.imported, summary.skipped)
+                }
+            } catch (e: BitwardenImport.ImportException) {
+                BackupResult.Failure(e.message ?: "This is not a Bitwarden export file")
+            } catch (e: Exception) {
+                BackupResult.Failure("Could not read the file")
+            }
             onResult(result)
         }
     }

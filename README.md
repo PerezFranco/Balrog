@@ -20,6 +20,8 @@ fingerprint and face unlock, and two-factor codes built into each entry. *It sha
   (`plural-ecosystem-jogging-reoccupy-unclip`) from the EFF large wordlist
 - **Encrypted backups** — save the whole vault as one encrypted file, and
   restore it on a new phone or merge it into an existing vault
+- **Import from Bitwarden** — bring a whole Bitwarden vault across from its
+  export file, two-factor codes included
 - **Automatic backup to Drive, OneDrive, …** — pick a file location once and
   Balrog keeps it up to date every time the vault changes
 - **Auto-lock** — the vault key is dropped after 60 s in the background
@@ -110,6 +112,18 @@ version history (or an occasional manual backup) if you want older copies.
 - Biometric unlock is tied to the device and is not part of a backup; turn it
   on again after restoring.
 
+### Importing from Bitwarden
+
+Settings → **Import from Bitwarden** reads a Bitwarden vault export: the
+unencrypted `.json` format (recommended — it carries everything) or `.csv`.
+Logins come across with username, password, first website and two-factor
+setup. Anything Balrog has no dedicated field for — extra websites, custom
+fields, folder names, and whole cards and identities — is kept as readable
+text in the entry's notes or in a secure note, so nothing in the export is
+lost. Importing the same file twice adds nothing. Bitwarden's encrypted
+export formats are not supported; the unencrypted file holds every password
+in the clear, so delete it as soon as the import is done.
+
 ### Passphrases
 
 Words are drawn uniformly with `SecureRandom` from the 7,776-word EFF large
@@ -128,7 +142,7 @@ Requires Android Studio (or the Android SDK + JDK 17). Then:
 - minSdk 26 (Android 8.0), targetSdk 34
 - Kotlin 2.0, Jetpack Compose (Material 3), Room, AndroidX Biometric
 
-Run the unit tests (crypto core, backups, two-factor codes, generators) with:
+Run the unit tests (crypto core, backups, Bitwarden import, two-factor codes, generators) with:
 
 ```sh
 ./gradlew test
@@ -136,6 +150,31 @@ Run the unit tests (crypto core, backups, two-factor codes, generators) with:
 
 Every push is also built and tested by GitHub Actions, which attaches the
 debug APK to the run.
+
+## Releases
+
+Pushing a tag such as `v1.1.0` makes GitHub Actions build the APK and attach
+it to a GitHub Release. Android will only update an installed app with an APK
+signed by the same key, so for releases you can install over one another, add
+a signing key to the repository's Actions secrets:
+
+```sh
+keytool -genkeypair -v -keystore balrog.jks -alias balrog \
+  -keyalg RSA -keysize 4096 -validity 10000
+base64 -w0 balrog.jks   # paste the output as the first secret
+```
+
+| Secret | Value |
+|--------|-------|
+| `BALROG_KEYSTORE_BASE64` | the base64 text above |
+| `BALROG_KEYSTORE_PASSWORD` | the keystore password |
+| `BALROG_KEY_ALIAS` | `balrog` |
+| `BALROG_KEY_PASSWORD` | the key password |
+
+Keep `balrog.jks` and its passwords somewhere safe and out of the repository.
+Without these secrets each release is signed with a one-off key: it installs
+fine, but moving to the next release means uninstalling first — save a backup
+before you do, and restore it afterwards.
 
 ## Threat model notes
 

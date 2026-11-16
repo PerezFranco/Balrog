@@ -92,6 +92,29 @@ fun SettingsScreen(
                 "Try another folder or app."
         }
     }
+    var importMessage by remember { mutableStateOf<String?>(null) }
+    var importFailed by remember { mutableStateOf(false) }
+    val bitwardenPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { source ->
+        if (source != null) {
+            importMessage = "Importing…"
+            importFailed = false
+            viewModel.importBitwarden(source) { result ->
+                importFailed = result !is BackupResult.Success
+                importMessage = when (result) {
+                    is BackupResult.Success ->
+                        "Imported ${result.count} ${plural(result.count, "item")}" +
+                            (if (result.skipped > 0) {
+                                ", skipped ${result.skipped} already in the vault."
+                            } else ".") +
+                            " Now delete the export file — it is not encrypted."
+                    is BackupResult.Failure -> result.message
+                    BackupResult.WrongPassword -> null
+                }
+            }
+        }
+    }
     val importPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { source -> if (source != null) restoreSource = source }
@@ -287,6 +310,37 @@ fun SettingsScreen(
                 Text(
                     it,
                     color = if (backupFailed) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(24.dp))
+            Text("Import from Bitwarden", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "In Bitwarden, open Settings → Vault options → Export vault, " +
+                    "choose the file format \".json\" and save the file. Then pick " +
+                    "it here. Logins come across with their two-factor codes; " +
+                    "cards and identities become secure notes.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = {
+                    importMessage = null
+                    bitwardenPicker.launch(BACKUP_OPEN_TYPES)
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Choose Bitwarden export file")
+            }
+            importMessage?.let {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    it,
+                    color = if (importFailed) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodySmall,
                 )

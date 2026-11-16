@@ -13,8 +13,23 @@ android {
         applicationId = "com.perezfranco.balrog"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
+    }
+
+    signingConfigs {
+        // Android only installs an update over an existing app if both are
+        // signed with the same key. Builds pick up a fixed key from the
+        // environment when one is provided (see the release workflow);
+        // otherwise they use the machine's throwaway debug key.
+        getByName("debug") {
+            System.getenv("BALROG_KEYSTORE")?.takeIf { it.isNotEmpty() }?.let { path ->
+                storeFile = file(path)
+                storePassword = System.getenv("BALROG_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("BALROG_KEY_ALIAS")
+                keyPassword = System.getenv("BALROG_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
