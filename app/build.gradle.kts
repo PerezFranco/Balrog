@@ -13,8 +13,8 @@ android {
         applicationId = "com.perezfranco.balrog"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.5.2"
+        versionCode = 9
+        versionName = "1.5.3"
     }
 
     signingConfigs {
@@ -79,6 +79,8 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.google.material)
     implementation(libs.zxing.android.embedded)
+    // Also used directly, to draw recipe QR codes; the version matches what the scanner brings.
+    implementation(libs.zxing.core)
     testImplementation(libs.junit)
     // The android.jar org.json classes are stubs; this makes them real in unit tests.
     testImplementation(libs.org.json)

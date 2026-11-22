@@ -1,0 +1,3452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<!-- Nothing is loaded from anywhere, and the page may only talk to its own site. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src data:; form-action 'none'; base-uri 'none'">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='20%2021%2068%2068'%3E%3Crect%20x='20'%20y='21'%20width='68'%20height='68'%20rx='15'%20fill='%23121212'/%3E%3Cpath%20d='M54,26%20L78,34%20V56%20C78,70%2068,79%2054,84%20C40,79%2030,70%2030,56%20V34%20Z'%20fill='%231C1B1F'%20stroke='%23FF7A00'%20stroke-width='3'/%3E%3Cpath%20d='M54,38%20C58,44%2062,46%2062,53%20C62,59%2058,63%2054,63%20C50,63%2046,59%2046,53%20C46,50%2047,48%2049,46%20C49,50%2051,51%2052,51%20C51,47%2051,42%2054,38%20Z'%20fill='%23FF7A00'/%3E%3Cpath%20d='M50,66%20H58%20V70%20H50%20Z'%20fill='%23FF7A00'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAJ4klEQVR4nNxbaWxU1xX+3uwznsVjs9nY2MGEmpgtYCjYiUIjSMIOSdOmKghBVWVTpSBVapo0olHU/iip1FZqA1JbkYZCl6QsRg6JIYGWNAFiAgnGEDAB2xjb2LN69i3nvpmxx3jG8+Z53gzkk57enZn33pzz3XPPPfec+xQQgKKiorpIJLKCmvV0lHEcN4HORtxZcJCMvXTuJPlO0LnRYrF8nO4mbpTfZIWFhZvoYdvoqMBdCCLkOh3bbDbbW/QxnOyaZARwpPg6Uvo1OmrwDQCRcJ6Ol4mIBvYx8bcRBJjN5pl0aiTlyyEhHigNYO1UP8oNYTReU2LfFRWcARmkAhHQEQ6Hv2O329sSvx9GgNFoXCCXy98n5QshAR4kpZ+414+VlX4UaSMjfj/arsS/L6tw+DqR4ecgAXqDweAqh8NxOv5F4r8YyNk10/leZAkcWVtdSRBrq/xYTb09QRcRdJ8vCHzQQVbRpsK711RwB7NKxiU6FpKDdERljIGU30WnTcgC4ua9rip5T7sDHA636/iD4bEpbiyvcEOrSE7QoatKNFxVoeErFXyhsZNBw2Gn1Wp9hrX5p5lMploy/dMQCSE9zUz6SIcOh67r8OENLQLh4YqoZBEsmezBKiJiWbkbetXIZ7j8wHvtKt5fNNFwuf0ZQkEEhAh1NBRO8U+g3j9FpwWZPESo0k1M6Ws6HOvSChZYycgo9WB1pRtLiQyDKvmzG7+KDhM2XEKRjMk4ScNgEUfKL6IPaQMGBiFKO3wxpamnj2egdCrEyVhVGbWMZGTYvBwOERn729Q43qmgCV/wfy5mBPySGttSXSFEabtPhqZOLQkRVToYkcSD82Q8VDo0TIzqkbL0ezjeXzDL+KhLQdKPKsurHM37+2naW5vqisubrEkdGW+C1MuN5Mg+6NQhH3i4zI0V5EBXViT3GT0uDve9ZU55P/mCA4yAs0TAnFQX9T9jGWwzpd9tZ2O6gHdkdxIYGcwylk8ZTkbxjqKU9xAB5xgBNiLAlOqiOAFtdgWW7J+MuwHH1t1AlSnIt9MQYFeMpnwiAiFpxrUUEOp4me7SBd93CfJKAIsAV1W4kE8okCewKe21hRbolWF8ekuNbnd+RMmbBTw5bQCTCkK8x97xUB/knLCFUraRNwK+TwTEMX+CDz+fb0M+kBcCitQhzBvvH/bd0zUOfHfqAHKNvBAwq9if9Pvt9f2YO86HXCIvBEzWB5N+ryBpdi65BYMyjFwhdwREIpikiyquV6R2eKXkGF+ptSJXyBkBL5GTWzzRy7dDaRz+D6YPoNrsRy6QEwIWkeLPznJghjnAf2bL53TYUu1ELpATArYtiJr0IxT5saHQ6Uof9KyudJFw0scGkhNQaQhgZszrsxXaqwutuGhVpr2PBUizx0k/DCQnYNHE4dPalvucOLSyG0EBjn6qMQCpIXkAPlE3csqrMAYhBCU0I0gNyQkYSxZBngMfIDkBFq8cYtHnE3+vUEhOwEVbeoeXChcsKkiNtE7QE/NDGoU4c2ymtb5HRG3PRrHCuT5xBGjlUVndAnxoWgIssaCFreDEgFVs3m4rQKb45xV9upx+ShRrorL2e9NPcmmvYIUGhmgRQpwV/PmCUdC0F4eXLOavFwwQAwUlVuJp8bjsoyE9Ad6hh4zXiFulXXUo8fLJIsHXbz1RjC6RKbJx2iFLzYoFWBIeMr1QfGS250sDdpxPv6/q182FVFfMfMjE8a3CoYHflw0LuGAZmorqSsaWrPhVsxnPHx+HdufI3r1E4fGmo+PxxnlBZYqUqJ/kHWwnyp4Kae3sWKcSr3zbw7frEh4uFgeprMaOeZT5mUNHkIoYZ2imaLFmZ8pbnCDjhx3pp+C0BJy9JaflKwcTOUGWrlJTOtsXHnuV6Eyfmj+yCa0iTKRGhykz/xZLej8iYDHE8RsQGFjKav3U/BYyRsMTVS4qd0XbQnqfQZCr3XtJhfXTosw+O9NOc3SB6Dn6hdk2WuUlXwxddSjwu8/FbVBj+xieJ9ni+MeXwqxLEAFHO1Ro6ZejpjiEqbSmZxuaGkV66gdLvVg4MbkzPdmtJgIgCmsq3SjTR6fAVnJ+zHcJgeB8wB8+0wy2t86x407DTxJk2v6pRvB9ggl454oKN11Rs6+m3N7G6bnJ2QnB5mrH4Pzf7pTh4FXhMwrbIyQ4vn20wo89y6PVmwAFhSsPlaA1w+mrmNYUannyv2R7APszXALPKvLhAGWYlLGuXN9gwH9vCF+BZkQAw/YHXNgyMzqGOwbkWHagFK5gfkqMRiqgHF3bxRdZGXZ+rsZL/8/MN2Us+S8+1uGyLXpbOTmd3ct6oVPkrpITByur7320Z1B55vi2fZL5Zq2MCWBmuvl9PfyxNUctVXb/RYLoc1jOYj3/n8e6MTuWbWaybHpPL2pPoiwSiWQc4LdShLXhMP1hjAQWfb1NAplU0icxC8mH7FvRjRlFUafno79ksrTZM0+fsU1SzAK6IQIsNvheo4GyPdHPNSTQ4dU3qVekq+7OH+9FE/3H9JjHd9HpcXJ6TBYx4DiuW67T6Z6idhlE4LpTjuMUcKyrojUCdYCREhFPTRuAnGg91aMWHS3eDrZ75Gf32/B6vWVwq6yTrH/NQSOae8XnHMkCWuQajaaWmKiFSNx0ybC/TYX6kiC/jVZGOi+a5MPSMjf+16WB3T+2zO4UfQB7H+nBqns8g3H++T451jUYaQk9tpwu6X2AWQAz4g0YA1gCc3erGgXUGbUTg7ygE3Rh/JCqvCZ1GF/0q+ANZeZvzTTWX5xnw2/r+1GqjzpYKivij+c0+FGTfjBXOUZsZZzKzWbzaWLjfmQBS8oCeOPhgWGbql0BDn9pNWJnixEO/+iCG1VhPFdjx+YZTuiUQ8/odXP48RE9TnSJN/lEsG2yVqt1Hm9U7C0xmUy2D1kCG6cvzPXg6VleaBPkZUTsowzxm5cMVC8Y7riY89xAFrP2HtcwxVlqe+cXGvz+rDar7xGFw+H1Nptt/+ATyQrOZMsK4phEw+DFBR5snDFyZjh7S4V3iAw2XJ6c5kq6b2hXixq/adaix53dSDPW+3NZe5AAg8FQrVAoPiIShKdvBaKkIMyTsKHah8n60QOmTlrM7L6oxpsX1Oj1SBJidwcCgSVOp5O9PDV8njKZTPNoKDRJQUIcS8v9PBGrq4aXbRralLziRzqkK4dRz1uCwWBdXHmGZC9OTqHTwdHeIcgG2PDYUuNFiAxiV6sm62Z+O5jZ02kNmX574vepvIqWiHidSHgO3wCQ8n8ixX9KTc/tv6WKUoJer7dRqVT+nUgYR8cs3IUgxfeEQqHH7Xb7bvqYNBEpaF4xGo1F5Bs2xt4tKr/DX5/voPNBmub+5nA4LOlu+hoAAP//1lrn8gAAAAZJREFUAwC9d9V8rTiPsQAAAABJRU5ErkJggg==">
+<title>Balrog</title>
+<style>
+  :root {
+    --bg: #121212; --surface: #1e1b18; --raised: #2a2622; --line: #3a342e;
+    --text: #ece6df; --muted: #a59c92; --accent: #ff7a00; --on-accent: #000;
+    --danger: #ff6b5e; --ok: #7bd88f;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #faf7f3; --surface: #ffffff; --raised: #f1ebe4; --line: #ddd3c8;
+      --text: #221d18; --muted: #6f655b; --accent: #b35600; --on-accent: #fff;
+      --danger: #b3261e; --ok: #1f7a3a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  input, textarea, select {
+    width: 100%; padding: 8px 10px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 6px;
+  }
+  input:focus, textarea:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea { min-height: 110px; resize: vertical; }
+  label { display: block; margin: 12px 0 4px; color: var(--muted); font-size: 13px; }
+  button {
+    padding: 7px 12px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--raised); cursor: pointer; white-space: nowrap;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+  button.danger { color: var(--danger); }
+  button.small { padding: 3px 8px; font-size: 13px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .muted { color: var(--muted); }
+  .error { color: var(--danger); }
+  .hidden { display: none !important; }
+
+  #login { max-width: 380px; margin: 0 auto; padding: 12vh 20px 20px; }
+  #login h1 { font-size: 34px; margin: 0 0 4px; font-weight: 500; }
+  #login .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  #login .check input { width: auto; }
+  #login button { width: 100%; margin-top: 18px; padding: 10px; }
+
+  #app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+  header {
+    display: flex; gap: 10px; align-items: center; padding: 10px 14px;
+    border-bottom: 1px solid var(--line); background: var(--surface); flex-wrap: wrap;
+  }
+  header .brand { font-size: 20px; margin-right: 6px; }
+  header #search { flex: 1 1 180px; max-width: 420px; }
+  header #status { margin-left: auto; font-size: 13px; }
+  main { display: grid; grid-template-columns: 200px minmax(260px, 1fr) minmax(320px, 440px); min-height: 0; }
+  nav, #list, #detail { overflow-y: auto; min-height: 0; }
+  nav { border-right: 1px solid var(--line); padding: 10px 8px; }
+  nav h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 8px 4px; }
+  nav .item {
+    display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left;
+    padding: 6px 8px; border: 1px solid transparent; background: none; border-radius: 6px;
+  }
+  nav .item span:first-child { overflow: hidden; text-overflow: ellipsis; }
+  nav .item.active { background: var(--raised); border-color: var(--line); }
+  nav .item.drop { border-color: var(--accent); }
+  nav .count { color: var(--muted); font-size: 13px; }
+  #list { border-right: 1px solid var(--line); }
+  .row {
+    display: flex; gap: 8px; align-items: center; padding: 8px 12px;
+    border-bottom: 1px solid var(--line); cursor: pointer;
+  }
+  .row:hover, .row.active { background: var(--surface); }
+  .row .text { flex: 1; min-width: 0; }
+  .row .title, .row .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .sub { color: var(--muted); font-size: 13px; }
+  .empty { padding: 40px 20px; text-align: center; color: var(--muted); }
+  #detail { padding: 14px 16px 30px; }
+  #detail h2 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  .field { display: flex; gap: 6px; align-items: center; }
+  .field input { flex: 1; }
+  .actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .code { font-size: 22px; letter-spacing: .08em; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; grid-auto-rows: min-content; overflow-y: auto; }
+    nav, #list, #detail { overflow: visible; border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+  .logo { display: block; width: 76px; height: 76px; margin: 0 auto 10px; }
+  header .logo { width: 28px; height: 28px; margin: 0; }
+  .brand-wrap { display: flex; align-items: center; gap: 9px; margin-right: 6px; }
+  .brand-wrap .brand { margin: 0; }
+  #login .hero { text-align: center; }
+  .download {
+    display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 26px;
+    padding: 11px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    color: var(--text); text-decoration: none; line-height: 1.25;
+    transition: border-color .15s, transform .15s, background .15s;
+  }
+  .download:hover { border-color: var(--accent); background: var(--raised); transform: translateY(-1px); }
+  .download:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .download svg { width: 22px; height: 22px; flex: none; color: var(--accent); }
+  .download .what { text-align: left; font-weight: 600; }
+  .download small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+  a.btn {
+    padding: 7px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--raised);
+    color: var(--text); text-decoration: none; white-space: nowrap;
+  }
+  a.btn:hover { border-color: var(--accent); }
+  main.gen { grid-template-columns: 200px minmax(320px, 640px); }
+  .gen-view { max-width: 600px; }
+  .row2 { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .result {
+    display: flex; gap: 8px; align-items: center; margin-top: 18px; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  }
+  .result .mono { flex: 1; font-size: 18px; word-break: break-all; }
+  .ok { color: var(--ok); }
+  .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .pepper-panel { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 10px; background: var(--surface); }
+  .pepper-row { display: flex; gap: 6px; align-items: center; padding: 4px 0; }
+  .pepper-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id='logo' viewBox='20 21 68 68'><rect x='20' y='21' width='68' height='68' rx='15' fill='#121212'/><path d='M54,26 L78,34 V56 C78,70 68,79 54,84 C40,79 30,70 30,56 V34 Z' fill='#1C1B1F' stroke='#FF7A00' stroke-width='3'/><path d='M54,38 C58,44 62,46 62,53 C62,59 58,63 54,63 C50,63 46,59 46,53 C46,50 47,48 49,46 C49,50 51,51 52,51 C51,47 51,42 54,38 Z' fill='#FF7A00'/><path d='M50,66 H58 V70 H50 Z' fill='#FF7A00'/></symbol></svg>
+
+<div id="login">
+  <div class="hero">
+    <svg class="logo" role="img" aria-label="Balrog"><use href="#logo"/></svg>
+    <h1>Balrog</h1>
+    <p class="muted">Your vault is decrypted in this browser only. Nothing readable is sent to the server.</p>
+  </div>
+  <label for="token">Sync token</label>
+  <input id="token" type="password" autocomplete="off" spellcheck="false">
+  <div class="check">
+    <input id="remember" type="checkbox">
+    <label for="remember" style="margin:0">Remember the token on this computer</label>
+  </div>
+  <label for="password">Master password</label>
+  <input id="password" type="password" autocomplete="off">
+  <button id="unlock" class="primary">Unlock</button>
+  <p id="loginError" class="error" role="alert"></p>
+  <a class="download" href="https://github.com/PerezFranco/Balrog/releases/latest/download/Balrog.apk" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5M4 20h16"/></svg>
+    <span class="what">Download the Android app<small>Latest version &middot; APK</small></span>
+  </a>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <span class="brand-wrap"><svg class="logo" role="img" aria-label="Balrog"><use href="#logo"/></svg><span class="brand">Balrog</span></span>
+    <input id="search" type="search" placeholder="Search" autocomplete="off">
+    <button id="newPassword">+ Password</button>
+    <button id="newNote">+ Note</button>
+    <span id="status" class="muted" role="status"></span>
+    <a class="btn" href="https://github.com/PerezFranco/Balrog/releases/latest/download/Balrog.apk" rel="noopener noreferrer" title="Download the Android app">Android app</a>
+    <button id="lock">Lock</button>
+  </header>
+  <main id="main">
+    <nav id="nav"></nav>
+    <section id="list"></section>
+    <section id="detail"></section>
+  </main>
+</div>
+
+<script>
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+<script>
+"use strict";
+/*
+ * Balrog for the browser. One self-contained page that sits next to
+ * balrog-sync.php. It reads and writes the same encrypted vault file as the
+ * Android app (see VaultBackup.kt for the format, VaultMerge.kt for the
+ * rules) using the browser's built-in cryptography.
+ *
+ * Security notes for whoever edits this:
+ *  - Vault data is only ever put into the page with textContent / .value,
+ *    never as HTML.
+ *  - The master password and vault key live in memory only and are dropped
+ *    on lock, on inactivity, and when the page closes.
+ */
+
+const SYNC_URL = "balrog-sync.php";
+const AUTO_LOCK_MS = 5 * 60 * 1000;
+const CLIPBOARD_CLEAR_MS = 30 * 1000;
+const REFRESH_MS = 60 * 1000;
+
+const $ = (id) => document.getElementById(id);
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+// ---- Small helpers ---------------------------------------------------------
+
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "text") el.textContent = v;
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children.flat()) {
+    if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+
+const b64 = (bytes) => {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+const unb64 = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+
+function concat(parts) {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
+}
+
+function sameBytes(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
+function newUid() {
+  return crypto.randomUUID ? crypto.randomUUID()
+    : Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ---- Cryptography (mirrors CryptoEngine.kt / VaultBackup.kt) ----------------
+
+async function deriveKek(password, salt, iterations) {
+  const base = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+}
+
+/** Blobs are IV (12 bytes) || ciphertext+tag. */
+async function decrypt(key, blob) {
+  if (blob.length <= 12) throw new Error("blob too short");
+  return new Uint8Array(await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: blob.subarray(0, 12), tagLength: 128 }, key, blob.subarray(12)));
+}
+
+async function encrypt(key, plain) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, tagLength: 128 }, key, plain));
+  return concat([iv, ct]);
+}
+
+/** SHA-256 over the file's contents; must match VaultBackup.digest exactly. */
+async function digest(file) {
+  const parts = [];
+  const putInt = (n) => parts.push(new Uint8Array([n >>> 24, n >>> 16, n >>> 8, n].map((x) => x & 0xff)));
+  const putLong = (n) => { putInt(Math.floor(n / 4294967296)); putInt(n >>> 0); };
+  const putBytes = (bytes) => { putInt(bytes.length); parts.push(bytes); };
+  const v2 = file.version >= 2;
+  if (v2) {
+    putBytes(enc.encode("balrog-v2"));
+    putBytes(file.key.salt);
+    putInt(file.key.iterations);
+    putBytes(file.key.wrappedDek);
+    putLong(file.key.updatedAt);
+  }
+  putInt(file.records.length);
+  for (const r of file.records) {
+    if (v2) putBytes(enc.encode(r.uid));
+    putBytes(enc.encode(r.type));
+    putLong(r.createdAt);
+    putLong(r.updatedAt);
+    putBytes(r.payload);
+  }
+  if (v2) {
+    putInt(file.tombstones.length);
+    for (const t of file.tombstones) { putBytes(enc.encode(t.uid)); putLong(t.deletedAt); }
+  }
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", concat(parts)));
+}
+
+function parseFile(text) {
+  let root;
+  try { root = JSON.parse(text); } catch (e) { throw new Error("The server's vault file is damaged."); }
+  if (root.format !== "balrog-backup") throw new Error("The server's file is not a Balrog vault.");
+  if (root.version > 2) throw new Error("This vault was written by a newer Balrog. Update this page.");
+  if (root.version < 2) throw new Error("This vault predates sync. Sync it once from the phone app (1.5 or newer).");
+  return {
+    version: root.version,
+    key: {
+      salt: unb64(root.kdf.salt), iterations: root.kdf.iterations,
+      wrappedDek: unb64(root.wrappedKey), updatedAt: root.keyUpdatedAt || 0,
+    },
+    records: root.items.map((i) => ({
+      uid: i.uid, type: i.type, payload: unb64(i.payload), createdAt: i.createdAt, updatedAt: i.updatedAt,
+    })),
+    tombstones: (root.deleted || []).map((d) => ({ uid: d.uid, deletedAt: d.deletedAt })),
+    seal: unb64(root.seal),
+  };
+}
+
+async function verifyFile(file, dek) {
+  let sealed = null;
+  try { sealed = await decrypt(dek, file.seal); } catch (e) { /* wrong key or altered */ }
+  if (!sealed || !sameBytes(sealed, await digest(file))) {
+    throw new Error("The vault on the server does not verify. It may have been altered, or belongs to another vault.");
+  }
+}
+
+async function encodeFile(file, dek) {
+  const seal = await encrypt(dek, await digest(file));
+  return JSON.stringify({
+    format: "balrog-backup", version: 2, createdAt: Date.now(),
+    kdf: { algorithm: "PBKDF2-HMAC-SHA256", salt: b64(file.key.salt), iterations: file.key.iterations },
+    wrappedKey: b64(file.key.wrappedDek),
+    keyUpdatedAt: file.key.updatedAt,
+    seal: b64(seal),
+    items: file.records.map((r) => ({
+      uid: r.uid, type: r.type, payload: b64(r.payload), createdAt: r.createdAt, updatedAt: r.updatedAt,
+    })),
+    deleted: file.tombstones.map((t) => ({ uid: t.uid, deletedAt: t.deletedAt })),
+  });
+}
+
+// ---- Two-factor codes (mirrors Totp.kt) --------------------------------------
+
+function base32Decode(text) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const clean = text.toUpperCase().replace(/[\s=-]/g, "");
+  const out = [];
+  let buffer = 0, bits = 0;
+  for (const c of clean) {
+    const v = alphabet.indexOf(c);
+    if (v < 0) throw new Error("Setup keys only contain the letters A–Z and the digits 2–7.");
+    buffer = (buffer << 5) | v; bits += 5;
+    if (bits >= 8) { bits -= 8; out.push((buffer >> bits) & 0xff); buffer &= (1 << bits) - 1; }
+  }
+  if (!out.length) throw new Error("That setup key is too short.");
+  return new Uint8Array(out);
+}
+
+/** Accepts an otpauth://totp/ link or a bare setup key. */
+function parseTotp(input) {
+  const text = input.trim();
+  if (!text) throw new Error("Enter a setup key.");
+  const config = { secret: "", algorithm: "SHA1", digits: 6, period: 30, issuer: "", account: "" };
+  if (/^otpauth:\/\//i.test(text)) {
+    if (!/^otpauth:\/\/totp\//i.test(text)) throw new Error("Only time-based (TOTP) codes are supported.");
+    const query = new URLSearchParams(text.includes("?") ? text.slice(text.indexOf("?") + 1).replace(/\+/g, "%2B") : "");
+    const get = (name) => { for (const [k, v] of query) if (k.toLowerCase() === name) return v; return null; };
+    config.secret = get("secret") || "";
+    const algorithm = (get("algorithm") || "SHA1").toUpperCase().replace("-", "");
+    if (!["SHA1", "SHA256", "SHA512"].includes(algorithm)) throw new Error("Unsupported algorithm: " + algorithm);
+    config.algorithm = algorithm;
+    config.digits = parseInt(get("digits") || "6", 10);
+    config.period = parseInt(get("period") || "30", 10);
+    if (!(config.digits >= 6 && config.digits <= 8)) throw new Error("Unsupported code length.");
+    if (!(config.period >= 1 && config.period <= 3600)) throw new Error("Unsupported period.");
+    const label = decodeURIComponent(text.slice(text.toLowerCase().indexOf("totp/") + 5).split("?")[0]);
+    const colon = label.indexOf(":");
+    config.account = (colon < 0 ? label : label.slice(colon + 1)).trim();
+    config.issuer = (get("issuer") || (colon < 0 ? "" : label.slice(0, colon))).trim();
+  } else {
+    config.secret = text;
+  }
+  config.secret = config.secret.toUpperCase().replace(/[\s=-]/g, "");
+  base32Decode(config.secret); // validates
+  return config;
+}
+
+/** The canonical otpauth URI, as Totp.Config.toUri() writes it. */
+function totpToUri(c) {
+  const e = (s) => encodeURIComponent(s).replace(/[!'()*]/g, (ch) => "%" + ch.charCodeAt(0).toString(16).toUpperCase());
+  const label = c.issuer && c.account ? c.issuer + ":" + c.account : (c.account || c.issuer);
+  return "otpauth://totp/" + e(label) + "?secret=" + c.secret + (c.issuer ? "&issuer=" + e(c.issuer) : "") +
+    "&algorithm=" + c.algorithm + "&digits=" + c.digits + "&period=" + c.period;
+}
+
+async function totpCode(config, now) {
+  const counter = Math.floor(now / 1000 / config.period);
+  const message = new Uint8Array(8);
+  new DataView(message.buffer).setUint32(0, Math.floor(counter / 4294967296));
+  new DataView(message.buffer).setUint32(4, counter >>> 0);
+  const hash = { SHA1: "SHA-1", SHA256: "SHA-256", SHA512: "SHA-512" }[config.algorithm];
+  const key = await crypto.subtle.importKey("raw", base32Decode(config.secret), { name: "HMAC", hash }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, message));
+  const offset = mac[mac.length - 1] & 0x0f;
+  const binary = ((mac[offset] & 0x7f) * 16777216) + (mac[offset + 1] << 16) + (mac[offset + 2] << 8) + mac[offset + 3];
+  return String(binary % 10 ** config.digits).padStart(config.digits, "0");
+}
+
+// ---- Server ------------------------------------------------------------------
+
+async function request(method, token, body, base) {
+  const headers = { "X-Balrog-Token": token };
+  if (base != null) headers["X-Balrog-Base"] = base;
+  let response;
+  try {
+    response = await fetch(SYNC_URL, { method, headers, body, cache: "no-store", credentials: "omit" });
+  } catch (e) {
+    throw new Error("Could not reach the server.");
+  }
+  if (response.status === 401 || response.status === 403) throw new Error("The server rejected the sync token.");
+  if (response.status === 503) throw new Error("The sync script has no token yet. Create balrog-config.php next to it.");
+  return response;
+}
+
+// ---- Vault state ---------------------------------------------------------------
+
+/** Everything known while unlocked; null when locked. */
+let vault = null;
+let view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null, gen: newGen() };
+let lockTimer = null, refreshTimer = null, clipboardTimer = null, codeTimer = null;
+
+async function loadFromServer(token, dek, password) {
+  const response = await request("GET", token);
+  if (response.status === 204 || response.status === 404) {
+    throw new Error("There is no vault on the server yet. Turn on sync in the phone app first.");
+  }
+  if (!response.ok) throw new Error("The server answered with error " + response.status + ".");
+  const revision = response.headers.get("X-Balrog-Revision") || "";
+  const file = parseFile(await response.text());
+  if (!dek) {
+    const kek = await deriveKek(password, file.key.salt, file.key.iterations);
+    let raw;
+    try { raw = await decrypt(kek, file.key.wrappedDek); } catch (e) { throw new Error("Wrong master password."); }
+    dek = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
+    raw.fill(0);
+  }
+  await verifyFile(file, dek);
+  const items = new Map();
+  for (const r of file.records) {
+    try { items.set(r.uid, JSON.parse(dec.decode(await decrypt(dek, r.payload)))); } catch (e) { /* unreadable: left alone */ }
+  }
+  return { token, dek, revision, file, items };
+}
+
+/**
+ * Applies [change] to the vault and stores it. If another device stored
+ * something in the meantime, fetches that, re-applies the change on top,
+ * and tries again — so nothing made elsewhere is overwritten.
+ */
+async function commit(change) {
+  setStatus("Saving…");
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const file = {
+      version: 2, key: vault.file.key,
+      records: vault.file.records.slice(), tombstones: vault.file.tombstones.slice(),
+    };
+    const items = new Map(vault.items);
+    await change(file, items);
+    const body = await encodeFile(file, vault.dek);
+    const response = await request("POST", vault.token, body, vault.revision);
+    if (response.ok) {
+      vault.file = file; vault.items = items;
+      vault.revision = response.headers.get("X-Balrog-Revision") || "";
+      setStatus("Saved " + new Date().toLocaleTimeString());
+      return;
+    }
+    if (response.status !== 409) throw new Error("The server answered with error " + response.status + ".");
+    vault = { ...vault, ...(await loadFromServer(vault.token, vault.dek)) };
+  }
+  throw new Error("The server is busy. Try again in a moment.");
+}
+
+async function putItem(file, items, uid, type, json) {
+  const now = Date.now();
+  const at = file.records.findIndex((r) => r.uid === uid);
+  const old = at >= 0 ? file.records[at] : null;
+  const record = {
+    uid, type, payload: await encrypt(vault.dek, enc.encode(JSON.stringify(json))),
+    createdAt: old ? old.createdAt : now,
+    updatedAt: old ? Math.max(now, old.updatedAt + 1) : now,
+  };
+  if (old) file.records[at] = record; else file.records.push(record);
+  file.tombstones = file.tombstones.filter((t) => t.uid !== uid);
+  items.set(uid, json);
+}
+
+function removeItem(file, items, uid) {
+  file.records = file.records.filter((r) => r.uid !== uid);
+  file.tombstones = file.tombstones.filter((t) => t.uid !== uid).concat({ uid, deletedAt: Date.now() });
+  items.delete(uid);
+}
+
+async function refresh() {
+  if (!vault || view.draft) return; // never pull the rug from under an edit
+  try {
+    const response = await request("GET", vault.token);
+    if (response.ok && (response.headers.get("X-Balrog-Revision") || "") !== vault.revision) {
+      vault = { ...vault, ...(await loadFromServer(vault.token, vault.dek)) };
+      setStatus("Updated " + new Date().toLocaleTimeString());
+      render();
+    }
+  } catch (e) { setStatus(e.message, true); }
+}
+
+// ---- Lock / unlock ----------------------------------------------------------------
+
+function lock(message) {
+  vault = null;
+  view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null, gen: newGen() };
+  clearTimeout(lockTimer); clearInterval(refreshTimer); clearInterval(codeTimer);
+  $("app").classList.add("hidden");
+  $("login").classList.remove("hidden");
+  $("nav").replaceChildren(); $("list").replaceChildren(); $("detail").replaceChildren();
+  $("search").value = "";
+  $("password").value = "";
+  $("loginError").textContent = message || "";
+  $("password").focus();
+}
+
+function touch() {
+  if (!vault) return;
+  clearTimeout(lockTimer);
+  lockTimer = setTimeout(() => lock("Locked after 5 minutes without activity."), AUTO_LOCK_MS);
+}
+
+async function unlock() {
+  const token = $("token").value.trim();
+  const password = $("password").value;
+  if (!token || !password) { $("loginError").textContent = "Enter the sync token and your master password."; return; }
+  $("unlock").disabled = true;
+  $("unlock").textContent = "Unlocking…";
+  $("loginError").textContent = "";
+  try {
+    vault = await loadFromServer(token, null, password);
+    try {
+      if ($("remember").checked) localStorage.setItem("balrog.token", token);
+      else localStorage.removeItem("balrog.token");
+    } catch (e) { /* storage unavailable: just don't remember */ }
+    $("password").value = "";
+    $("login").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    setStatus("In sync");
+    refreshTimer = setInterval(refresh, REFRESH_MS);
+    touch();
+    render();
+    $("search").focus();
+  } catch (e) {
+    vault = null;
+    $("loginError").textContent = e.message;
+  } finally {
+    $("unlock").disabled = false;
+    $("unlock").textContent = "Unlock";
+  }
+}
+
+function setStatus(text, isError) {
+  $("status").textContent = text;
+  $("status").className = isError ? "error" : "muted";
+}
+
+async function copy(what, value) {
+  try {
+    await navigator.clipboard.writeText(value);
+    setStatus(what + " copied — clears in 30 s");
+    clearTimeout(clipboardTimer);
+    clipboardTimer = setTimeout(() => navigator.clipboard.writeText("").catch(() => {}), CLIPBOARD_CLEAR_MS);
+  } catch (e) {
+    setStatus("The browser blocked copying.", true);
+  }
+}
+
+// ---- Rendering -------------------------------------------------------------------------
+
+const typeOf = (uid) => vault.file.records.find((r) => r.uid === uid).type;
+
+function entries(type) {
+  return vault.file.records
+    .filter((r) => r.type === type && vault.items.has(r.uid))
+    .map((r) => ({ uid: r.uid, ...vault.items.get(r.uid) }))
+    .sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" }));
+}
+
+function folders() {
+  const names = new Set();
+  for (const r of vault.file.records) {
+    const item = vault.items.get(r.uid);
+    if (item && r.type !== "PEPPER" && item.folder) names.add(item.folder);
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+function visible() {
+  const q = view.query.trim().toLowerCase();
+  return entries(view.type).filter((e) =>
+    (view.folder === null || (e.folder || "") === view.folder) &&
+    (!q || [e.title, e.username, e.url].some((v) => (v || "").toLowerCase().includes(q))));
+}
+
+function render() {
+  const generator = view.type === "GENERATOR";
+  $("main").classList.toggle("gen", generator);
+  $("list").classList.toggle("hidden", generator);
+  renderNav();
+  if (generator) { clearInterval(codeTimer); renderGenerator(); } else { renderList(); renderDetail(); }
+}
+
+function renderNav() {
+  const typeButton = (type, label) => h("button", {
+    class: "item" + (view.type === type ? " active" : ""),
+    onclick: () => { view.type = type; view.selected = null; view.draft = null; render(); },
+  }, h("span", { text: label }), type === "GENERATOR" ? null : h("span", { class: "count", text: entries(type).length }));
+
+  if (view.type === "GENERATOR") {
+    $("nav").replaceChildren(
+      h("h2", { text: "Show" }),
+      typeButton("PASSWORD", "Passwords"), typeButton("NOTE", "Notes"), typeButton("GENERATOR", "Generator"));
+    return;
+  }
+
+  const all = entries(view.type);
+  const count = (folder) => all.filter((e) => folder === null || (e.folder || "") === folder).length;
+  const names = folders();
+  if (view.folder && !names.includes(view.folder)) view.folder = null;
+
+  const folderButton = (folder, label) => {
+    const el = h("button", {
+      class: "item" + (view.folder === folder ? " active" : ""),
+      onclick: () => { view.folder = folder; render(); },
+    }, h("span", { text: label }), h("span", { class: "count", text: count(folder) }));
+    if (folder !== null) {
+      // Drop an entry here to file it under this folder.
+      el.addEventListener("dragover", (e) => { e.preventDefault(); el.classList.add("drop"); });
+      el.addEventListener("dragleave", () => el.classList.remove("drop"));
+      el.addEventListener("drop", (e) => {
+        e.preventDefault(); el.classList.remove("drop");
+        const uid = e.dataTransfer.getData("text/plain");
+        if (vault.items.has(uid)) moveToFolder([uid], folder);
+      });
+    }
+    return el;
+  };
+
+  $("nav").replaceChildren(
+    h("h2", { text: "Show" }),
+    typeButton("PASSWORD", "Passwords"), typeButton("NOTE", "Notes"), typeButton("GENERATOR", "Generator"),
+    h("h2", { text: "Folders" }),
+    folderButton(null, "All"),
+    ...names.map((n) => folderButton(n, n)),
+    folderButton("", "No folder"),
+    h("div", { style: "padding:10px 8px" },
+      h("button", { class: "small", onclick: newFolder }, "+ New folder"),
+      view.folder ? h("button", { class: "small", style: "margin-left:6px", onclick: renameFolder }, "Rename") : null,
+      h("p", { class: "muted", style: "font-size:12px" }, "Drag an entry onto a folder to move it.")));
+}
+
+function renderList() {
+  const rows = visible().map((e) => {
+    const buttons = [];
+    if (view.type === "PASSWORD") {
+      if (e.totp) buttons.push(h("button", { class: "small", title: "Copy two-factor code", onclick: async (ev) => {
+        ev.stopPropagation();
+        try { copy("Code", await totpCode(parseTotp(e.totp), Date.now())); } catch (err) { setStatus(err.message, true); }
+      } }, "2FA"));
+      if (e.username) buttons.push(h("button", { class: "small", title: "Copy username", onclick: (ev) => { ev.stopPropagation(); copy("Username", e.username); } }, "User"));
+      buttons.push(h("button", { class: "small", title: "Copy password", onclick: (ev) => { ev.stopPropagation(); copy("Password", e.password || ""); } }, "Pass"));
+    }
+    return h("div", {
+      class: "row" + (view.selected === e.uid ? " active" : ""), draggable: "true",
+      ondragstart: (ev) => ev.dataTransfer.setData("text/plain", e.uid),
+      onclick: () => select(e.uid),
+    },
+    h("div", { class: "text" },
+      h("div", { class: "title", text: e.title || "(untitled)" }),
+      h("div", { class: "sub", text: view.type === "PASSWORD" ? (e.username || "") : (e.folder || "") })),
+    ...buttons);
+  });
+  $("list").replaceChildren(...(rows.length ? rows : [h("div", { class: "empty", text:
+    view.query ? "Nothing matches." : "Nothing here yet." })]));
+}
+
+function select(uid) {
+  view.selected = uid;
+  view.draft = null;
+  render();
+}
+
+function startNew(type) {
+  view.type = type;
+  view.selected = null;
+  view.draft = type === "PASSWORD"
+    ? { uid: null, type, title: "", username: "", password: "", url: "", notes: "", totp: "", folder: view.folder || "" }
+    : { uid: null, type, title: "", body: "", folder: view.folder || "" };
+  render();
+}
+
+function renderDetail() {
+  clearInterval(codeTimer);
+  const detail = $("detail");
+  let item = view.draft;
+  if (!item && view.selected && vault.items.has(view.selected)) {
+    item = { uid: view.selected, type: typeOf(view.selected), ...vault.items.get(view.selected) };
+  }
+  if (!item) { detail.replaceChildren(h("div", { class: "empty", text: "Select an entry, or add one." })); return; }
+
+  const isPassword = item.type === "PASSWORD";
+  const input = (value, attrs) => h("input", { value: value || "", autocomplete: "off", spellcheck: "false", ...attrs });
+  const title = input(item.title);
+  const folder = input(item.folder, { list: "folderNames", placeholder: "None" });
+  const error = h("p", { class: "error", role: "alert" });
+  const fields = [h("label", {}, "Title"), title];
+  let read;
+
+  if (isPassword) {
+    const username = input(item.username);
+    const password = input(item.password, { type: "password", class: "mono" });
+    const url = input(item.url, { inputmode: "url" });
+    const totp = input(item.totp ? parseTotpSafe(item.totp).secret : "", { class: "mono", placeholder: "Setup key or otpauth:// link" });
+    const notes = h("textarea", {}); notes.value = item.notes || "";
+    const code = h("span", { class: "mono code" });
+    const codeRow = h("div", { class: "field", style: "margin-top:6px" }, code,
+      h("button", { class: "small", onclick: () => copy("Code", code.dataset.value || "") }, "Copy"));
+    const showCode = async () => {
+      try {
+        const c = parseTotp(totp.value);
+        const now = Date.now();
+        code.dataset.value = await totpCode(c, now);
+        code.textContent = code.dataset.value + "  (" + (c.period - Math.floor(now / 1000) % c.period) + " s)";
+        codeRow.classList.remove("hidden");
+      } catch (e) { codeRow.classList.add("hidden"); }
+    };
+    totp.addEventListener("input", showCode);
+    showCode();
+    codeTimer = setInterval(showCode, 1000);
+
+    fields.push(
+      h("label", {}, "Username / email"),
+      h("div", { class: "field" }, username, h("button", { class: "small", onclick: () => copy("Username", username.value) }, "Copy")),
+      h("label", {}, "Password"),
+      h("div", { class: "field" }, password,
+        h("button", { class: "small", onclick: (ev) => {
+          password.type = password.type === "password" ? "text" : "password";
+          ev.target.textContent = password.type === "password" ? "Show" : "Hide";
+        } }, "Show"),
+        h("button", { class: "small", onclick: () => copy("Password", password.value) }, "Copy")),
+      h("label", {}, "Website"), url,
+      h("label", {}, "Two-factor setup key"), totp, codeRow,
+      h("label", {}, "Folder"), folder,
+      h("label", {}, "Notes"), notes);
+    read = () => {
+      const next = { ...stripMeta(item), title: title.value, username: username.value, password: password.value,
+        url: url.value, notes: notes.value, folder: folder.value.trim() };
+      // A changed password no longer comes from its saved recipe.
+      if (next.recipe && password.value !== item.password) next.recipe = "";
+      const key = totp.value.trim();
+      if (!key) next.totp = "";
+      else if (!item.totp || parseTotpSafe(item.totp).secret !== key.toUpperCase().replace(/[\s=-]/g, "")) {
+        next.totp = totpToUri(parseTotp(key)); // throws with a readable message
+      }
+      return next;
+    };
+  } else {
+    const body = h("textarea", { style: "min-height:260px" }); body.value = item.body || "";
+    fields.push(h("label", {}, "Note"), body, h("label", {}, "Folder"), folder);
+    read = () => ({ ...stripMeta(item), title: title.value, body: body.value, folder: folder.value.trim() });
+  }
+
+  const save = h("button", { class: "primary", onclick: async () => {
+    let next;
+    try { next = read(); } catch (e) { error.textContent = e.message; return; }
+    const uid = item.uid || newUid();
+    save.disabled = true;
+    try {
+      await commit((file, items) => putItem(file, items, uid, item.type, next));
+      view.draft = null; view.selected = uid;
+      render();
+    } catch (e) { error.textContent = e.message; setStatus(e.message, true); save.disabled = false; }
+  } }, "Save");
+
+  const remove = item.uid ? h("button", { class: "danger", onclick: async () => {
+    if (!confirm('Delete "' + (item.title || "(untitled)") + '"? It will be deleted on your phone too.')) return;
+    try {
+      await commit((file, items) => removeItem(file, items, item.uid));
+      view.selected = null;
+      render();
+    } catch (e) { error.textContent = e.message; setStatus(e.message, true); }
+  } }, "Delete") : null;
+
+  detail.replaceChildren(
+    h("h2", { text: item.uid ? (isPassword ? "Password" : "Note") : (isPassword ? "New password" : "New note") }),
+    h("datalist", { id: "folderNames" }, ...folders().map((n) => h("option", { value: n }))),
+    ...fields,
+    h("div", { class: "actions" }, save,
+      h("button", { onclick: () => { view.draft = null; if (!item.uid) view.selected = null; render(); } }, item.uid ? "Revert" : "Cancel"),
+      remove),
+    error);
+  // Editing an existing entry counts as a draft too, so a background refresh
+  // does not replace what is being typed.
+  detail.oninput = () => { if (!view.draft) view.draft = item; };
+  if (!item.uid) title.focus();
+}
+
+const stripMeta = ({ uid, type, ...rest }) => rest;
+function parseTotpSafe(value) { try { return parseTotp(value); } catch (e) { return { secret: "" }; } }
+
+async function moveToFolder(uids, folder) {
+  try {
+    await commit(async (file, items) => {
+      for (const uid of uids) {
+        const item = items.get(uid);
+        const record = file.records.find((r) => r.uid === uid);
+        if (item && record && (item.folder || "") !== folder) {
+          await putItem(file, items, uid, record.type, { ...item, folder });
+        }
+      }
+    });
+  } catch (e) { setStatus(e.message, true); }
+  render();
+}
+
+function newFolder() {
+  const name = (prompt("Name of the new folder. It appears once an entry is in it — the selected entry is moved there now.") || "").trim();
+  if (!name) return;
+  if (view.selected) moveToFolder([view.selected], name).then(() => { view.folder = name; render(); });
+  else setStatus("Select an entry first, then create the folder for it.", true);
+}
+
+function renameFolder() {
+  const old = view.folder;
+  const name = prompt('Rename folder "' + old + '" (leave empty to remove the folder and keep its entries):', old);
+  if (name === null || name.trim() === old) return;
+  const uids = vault.file.records
+    .filter((r) => r.type !== "PEPPER" && vault.items.has(r.uid) && (vault.items.get(r.uid).folder || "") === old)
+    .map((r) => r.uid);
+  moveToFolder(uids, name.trim()).then(() => { view.folder = name.trim() || null; render(); });
+}
+
+// ---- Deterministic generator -------------------------------------------------------
+// A port of DeterministicGenerator.kt, which is itself a port of the standalone
+// Generator app. The output must stay identical to theirs, character for character:
+// do NOT change the algorithm. Reference: Base "Roberto", Case "Joaquin", Salt
+// "Perez-Franco", no Pepper, Trim 10 gives mpyz\XK-%G (ANC), orxycYT73Q (AN) and
+// prxyeaWGDV (A).
+
+const DET_TYPES = [
+  { key: "ANC", label: "Letters, numbers and special", pool: 94 },
+  { key: "AN", label: "Letters and numbers", pool: 62 },
+  { key: "A", label: "Letters only", pool: 52 },
+];
+const detType = (key) => DET_TYPES.find((t) => t.key === key) || DET_TYPES[0];
+
+async function detPassword(base, kase, salt, pepper, trim, typeKey) {
+  const pool = detType(typeKey).pool;
+  if (!(trim >= 1 && trim <= pool)) throw new Error("Trim must be between 1 and " + pool);
+  const baseCase = "My base is " + base + "." + (kase ? " My case is " + kase + "." : " I use no case.");
+  const saltCombined = salt + pepper;
+  const fullSalt = (saltCombined ? "My salt 1 is " + saltCombined + "." : "I use no salt 1.") + " My trim is " + trim + ".";
+  // As in the Android app: the password is hashed as UTF-8, the salt as US-ASCII,
+  // where every character outside ASCII becomes '?'.
+  const saltBytes = Uint8Array.from(Array.from(fullSalt, (ch) => (ch.codePointAt(0) < 128 ? ch.codePointAt(0) : 63)));
+  const key = await crypto.subtle.importKey("raw", enc.encode(baseCase), "PBKDF2", false, ["deriveBits"]);
+  const derived = new Uint8Array(await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt: saltBytes, iterations: 100000 }, key, 200 * 8));
+  const text = b64(derived);
+  const numbers = [];
+  for (let i = 0; i < pool; i++) {
+    let digits = "";
+    for (let n = 0; n < 5; n++) digits += text.charCodeAt(2 * i + n);
+    numbers.push(Number(digits));
+  }
+  // Array.prototype.sort is stable, like Kotlin's sortedBy: ties keep their order.
+  const order = numbers.map((_, i) => i).sort((a, b) => numbers[a] - numbers[b]);
+  const ranks = new Array(pool);
+  order.forEach((original, position) => { ranks[original] = position; });
+  let out = "";
+  for (let i = 0; i < trim; i++) {
+    const r = ranks[i];
+    let c;
+    if (typeKey === "AN") c = r < 10 ? r + 48 : (r > 35 ? r + 61 : r + 55);
+    else if (typeKey === "A") c = r > 25 ? r + 71 : r + 65;
+    else c = 33 + r;
+    out += String.fromCharCode(c);
+  }
+  return out;
+}
+
+/** "m...G": first and last UTF-16 unit, as the app writes it. */
+const detHint = (value) => (value ? value[0] + "..." + value[value.length - 1] : null);
+
+function detRecipeText(r) {
+  return "Base: " + r.base + "\nCase: " + r.kase + "\nSalt: " + r.salt + "\nTrim: " + r.trim +
+    "\nType: " + r.type + (r.pepperHint ? "\nPepper: " + r.pepperHint : "") + (r.sane ? "\nSane: " + r.sane : "");
+}
+
+/** Reads recipe text (the app's Recipe.parse): null if it has none of the expected lines. */
+function detParseRecipe(text) {
+  const data = {};
+  for (const line of text.split("\n")) {
+    const l = line.replace(/\r$/, "");
+    const at = l.indexOf(": ");
+    if (at >= 0) data[l.slice(0, at).trim()] = l.slice(at + 2).trim();
+  }
+  if (!["Base", "Salt", "Trim", "Type"].some((k) => k in data)) return null;
+  const hint = (v) => {
+    if (v == null) return null;
+    const parts = v.split("...");
+    return parts.length === 2 && parts[0] && parts[1] ? parts[0][0] + "..." + parts[1][0] : null;
+  };
+  return {
+    base: data.Base || "", kase: data.Case || "", salt: data.Salt || "",
+    trim: "Trim" in data && /^[+-]?\d+$/.test(data.Trim) ? parseInt(data.Trim, 10) : null,
+    type: DET_TYPES.some((t) => t.key === data.Type) ? data.Type : null,
+    pepperHint: hint(data.Pepper), sane: hint(data.Sane),
+  };
+}
+
+function newGen() {
+  return { base: "", kase: "", salt: "", trim: "", type: "ANC", pepperUid: "",
+    expectedSane: null, expectedPepper: null, password: "", recipe: "", checksOut: null,
+    revealed: false, msg: "", msgError: false, busy: false, showPaste: false, managePeppers: false };
+}
+
+/** Stored Peppers, ordered like the app: digits and letters first, other characters after. */
+function peppers() {
+  const rank = (p) => {
+    const first = (p.value || "")[0];
+    if (first === undefined) return Infinity;
+    return /[\p{L}\p{N}]/u.test(first) ? first.codePointAt(0) : first.codePointAt(0) + 0x110000;
+  };
+  return vault.file.records
+    .filter((r) => r.type === "PEPPER" && vault.items.has(r.uid))
+    .map((r) => ({ uid: r.uid, ...vault.items.get(r.uid) }))
+    .sort((a, b) => rank(a) - rank(b));
+}
+const pepperLabel = (p) => (detHint(p.value) ? detHint(p.value) + " - " : "") + (p.title || "");
+
+function genSay(text, isError) {
+  view.gen.msg = text; view.gen.msgError = !!isError;
+  renderGenerator();
+}
+
+function genApplyRecipe(text, source) {
+  const g = view.gen;
+  const r = detParseRecipe(text);
+  if (!r) { genSay("That is not a generator recipe.", true); return false; }
+  g.base = r.base; g.kase = r.kase; g.salt = r.salt;
+  if (r.trim != null) g.trim = String(r.trim);
+  if (r.type) g.type = r.type;
+  g.expectedSane = r.sane; g.expectedPepper = r.pepperHint;
+  g.password = ""; g.recipe = ""; g.checksOut = null;
+  // Pick the Pepper for them when exactly one fits the recipe's hint.
+  const fits = r.pepperHint ? peppers().filter((p) => detHint(p.value) === r.pepperHint) : [];
+  g.pepperUid = fits.length === 1 ? fits[0].uid : "";
+  g.showPaste = false;
+  genSay(!r.pepperHint ? "Recipe " + source + "."
+    : fits.length === 1 ? "Recipe " + source + '. Pepper "' + fits[0].title + '" selected.'
+    : "Recipe " + source + ". Select the Pepper " + r.pepperHint + " before generating.");
+  return true;
+}
+
+async function genGenerate() {
+  const g = view.gen;
+  g.base = g.base.trim(); g.kase = g.kase.trim(); g.salt = g.salt.trim();
+  const type = detType(g.type);
+  let trim = parseInt(g.trim, 10);
+  if (!g.base || !g.salt || !(trim > 0)) { genSay("Base, Salt and Trim are required.", true); return; }
+  if (trim > type.pool) trim = type.pool;
+  g.trim = String(trim);
+  const pepper = peppers().find((p) => p.uid === g.pepperUid) || null;
+  const pepperHint = pepper ? detHint(pepper.value) : null;
+  if (g.expectedPepper && !pepper) {
+    genSay("This recipe expects the Pepper " + g.expectedPepper + ". Select it before generating.", true); return;
+  }
+  if (g.expectedPepper && pepperHint !== g.expectedPepper) {
+    genSay('Pepper "' + pepper.title + '" (' + pepperHint + ") is not the one this recipe expects (" + g.expectedPepper + ").", true); return;
+  }
+  // The previous result goes at once, so it can't be copied or turned into a QR code
+  // while a new one is being worked out.
+  g.password = ""; g.recipe = ""; g.checksOut = null; g.revealed = false;
+  g.busy = true; g.msg = ""; renderGenerator();
+  try {
+    const password = await detPassword(g.base, g.kase, g.salt, pepper ? pepper.value : "", trim, g.type);
+    const sane = detHint(password);
+    g.password = password; g.revealed = false;
+    g.checksOut = g.expectedSane ? g.expectedSane === sane : null;
+    // A snapshot of what actually produced this password.
+    g.recipe = detRecipeText({ base: g.base, kase: g.kase, salt: g.salt, trim, type: g.type, pepperHint, sane });
+  } catch (e) {
+    g.msg = e.message; g.msgError = true;
+  }
+  g.busy = false;
+  renderGenerator();
+}
+
+async function pepperAction(change) {
+  try { await change(); } catch (e) { setStatus(e.message, true); view.gen.msg = e.message; view.gen.msgError = true; }
+  renderGenerator();
+}
+
+function renderGenerator() {
+  if (!vault || view.type !== "GENERATOR") return;
+  const g = view.gen;
+  const list = peppers();
+  if (!list.some((p) => p.uid === g.pepperUid)) g.pepperUid = "";
+
+  const bind = (key, el, filter) => {
+    el.addEventListener("input", () => { if (filter) el.value = filter(el.value); g[key] = el.value; });
+    return el;
+  };
+  const textInput = (key) => bind(key, h("input", { value: g[key], autocomplete: "off", spellcheck: "false", autocapitalize: "off", autocorrect: "off" }));
+  const trim = bind("trim", h("input", { value: g.trim, inputmode: "numeric", autocomplete: "off", maxlength: "2" }), (v) => v.replace(/\D/g, "").slice(0, 2));
+  const typeSelect = h("select", { onchange: (e) => { g.type = e.target.value; renderGenerator(); } },
+    ...DET_TYPES.map((t) => h("option", { value: t.key, selected: g.type === t.key }, t.label)));
+  const pepperSelect = h("select", { onchange: (e) => { g.pepperUid = e.target.value; } },
+    h("option", { value: "" }, "(No Pepper)"),
+    ...list.map((p) => h("option", { value: p.uid, selected: p.uid === g.pepperUid }, pepperLabel(p))));
+  const max = detType(g.type).pool;
+
+  const paste = h("textarea", { placeholder: "Paste a recipe here" });
+  const pasteArea = g.showPaste ? h("div", {},
+    h("p", { class: "note" }, "Your browser did not allow reading the clipboard. Paste the recipe here instead."),
+    paste, h("div", { class: "row2" }, h("button", { onclick: () => genApplyRecipe(paste.value, "pasted") }, "Load recipe"))) : null;
+
+  const pepperPanel = !g.managePeppers ? null : (() => {
+    const name = h("input", { autocomplete: "off", placeholder: "Name" });
+    const value = h("input", { type: "password", autocomplete: "off", placeholder: "Value" });
+    return h("div", { class: "pepper-panel" },
+      h("strong", {}, "Peppers"),
+      ...(list.length ? list : []).map((p) => h("div", { class: "pepper-row" },
+        h("span", { text: pepperLabel(p) }),
+        h("button", { class: "small", onclick: () => {
+          const next = (prompt("New name for this Pepper:", p.title) || "").trim();
+          if (!next || next === p.title) return;
+          if (list.some((o) => o.uid !== p.uid && (o.title || "").toLowerCase() === next.toLowerCase())) { genSay("A Pepper with that name already exists.", true); return; }
+          pepperAction(() => commit((file, items) => putItem(file, items, p.uid, "PEPPER", { ...items.get(p.uid), title: next })));
+        } }, "Rename"),
+        h("button", { class: "small danger", onclick: () => {
+          if (!confirm('Delete the Pepper "' + p.title + '"? Passwords made with it cannot be recreated without it. It is deleted on your phone too.')) return;
+          pepperAction(() => commit((file, items) => removeItem(file, items, p.uid)));
+        } }, "Delete"))),
+      list.length ? null : h("p", { class: "muted" }, "No Peppers stored."),
+      h("label", {}, "Add a Pepper"), name, h("div", { style: "height:6px" }), value,
+      h("div", { class: "row2" }, h("button", { onclick: () => {
+        const title = name.value.trim();
+        if (!title || !value.value) { genSay("A Pepper needs a name and a value.", true); return; }
+        if (list.some((o) => (o.title || "").toLowerCase() === title.toLowerCase())) { genSay("A Pepper with that name already exists.", true); return; }
+        const uid = newUid();
+        pepperAction(async () => { await commit((file, items) => putItem(file, items, uid, "PEPPER", { title, value: value.value })); g.pepperUid = uid; g.msg = 'Pepper "' + title + '" stored in your vault.'; g.msgError = false; });
+      } }, "Store")),
+      h("p", { class: "note" }, "Peppers are stored encrypted in your vault, like everything else, and are shared with the phone app."));
+  })();
+
+  const result = !g.password ? null : h("div", {},
+    h("div", { class: "result" },
+      h("span", { class: "mono", text: g.revealed ? g.password : detHint(g.password) || "" }),
+      h("button", { class: "small", onclick: () => { g.revealed = !g.revealed; renderGenerator(); } }, g.revealed ? "Hide" : "Show")),
+    g.checksOut == null ? null : h("p", { class: g.checksOut ? "ok" : "error", text: g.checksOut ? "Checks out!" : "Does not match the recipe's check (" + g.expectedSane + ")!" }),
+    h("div", { class: "row2" },
+      h("button", { onclick: () => copy("Password", g.password) }, "Copy PW"),
+      h("button", { onclick: () => copy("Recipe", g.recipe) }, "Copy Recipe"),
+      h("button", { onclick: () => downloadQr(g.recipe) }, "Download QR")),
+    h("p", { class: "note" }, "The recipe and its QR code are as sensitive as the password itself unless you use a Pepper: anyone who has them can recreate it."));
+
+  $("detail").replaceChildren(h("div", { class: "gen-view" },
+    h("h2", { text: "Deterministic generator" }),
+    h("p", { class: "muted", style: "margin:0 0 6px" }, "The same recipe always gives the same password, so it can be recreated instead of stored."),
+    h("div", { class: "row2" },
+      h("button", { onclick: async () => {
+        try { const text = await navigator.clipboard.readText(); if (!text) genSay("The clipboard is empty.", true); else genApplyRecipe(text, "pasted"); }
+        catch (e) { g.showPaste = true; renderGenerator(); }
+      } }, "Paste recipe")),
+    pasteArea,
+    h("label", {}, "Base"), textInput("base"),
+    h("label", {}, "Case (optional)"), textInput("kase"),
+    h("label", {}, "Salt"), textInput("salt"),
+    h("label", {}, "Pepper"), pepperSelect,
+    h("div", { class: "row2" }, h("button", { class: "small", onclick: () => { g.managePeppers = !g.managePeppers; renderGenerator(); } }, g.managePeppers ? "Close Peppers" : "Manage Peppers")),
+    pepperPanel,
+    h("label", {}, "Type"), typeSelect,
+    h("label", {}, "Trim (length, up to " + max + ")"), trim,
+    h("div", { class: "row2" }, h("button", { class: "primary", disabled: g.busy, onclick: genGenerate }, g.busy ? "Generating…" : "Generate")),
+    g.msg ? h("p", { class: g.msgError ? "error" : "muted", role: g.msgError ? "alert" : "status", text: g.msg }) : null,
+    result));
+}
+
+// ---- QR code of a recipe ------------------------------------------------------------------
+// The text is the recipe exactly as "Copy Recipe" produces it, which is what the
+// phone app's "Scan QR" reads. Encoded as UTF-8 bytes, black on white, with the
+// 4-module quiet zone the QR standard asks for.
+
+function qrCanvas(text) {
+  qrcode.stringToBytes = (s) => Array.from(enc.encode(s));
+  const qr = qrcode(0, "M");
+  qr.addData(text, "Byte");
+  qr.make();
+  const n = qr.getModuleCount(), quiet = 4;
+  const scale = Math.max(6, Math.floor(1000 / (n + 2 * quiet)));
+  const size = (n + 2 * quiet) * scale;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = "#000";
+  for (let row = 0; row < n; row++) for (let col = 0; col < n; col++) {
+    if (qr.isDark(row, col)) ctx.fillRect((col + quiet) * scale, (row + quiet) * scale, scale, scale);
+  }
+  return canvas;
+}
+
+function downloadQr(text) {
+  try {
+    qrCanvas(text).toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = h("a", { href: url, download: "balrog-recipe-qr.png" });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setStatus("QR code downloaded");
+    }, "image/png");
+  } catch (e) { setStatus("Could not make the QR code.", true); }
+}
+
+// ---- Wiring ---------------------------------------------------------------------------------
+
+$("unlock").addEventListener("click", unlock);
+$("password").addEventListener("keydown", (e) => { if (e.key === "Enter") unlock(); });
+$("lock").addEventListener("click", () => lock());
+$("search").addEventListener("input", (e) => {
+  view.query = e.target.value;
+  if (view.type === "GENERATOR") { view.type = "PASSWORD"; render(); } else renderList();
+});
+$("newPassword").addEventListener("click", () => startNew("PASSWORD"));
+$("newNote").addEventListener("click", () => startNew("NOTE"));
+for (const type of ["pointerdown", "keydown", "wheel"]) document.addEventListener(type, touch, { passive: true });
+window.addEventListener("focus", refresh);
+
+try {
+  const saved = localStorage.getItem("balrog.token");
+  if (saved) { $("token").value = saved; $("remember").checked = true; $("password").focus(); }
+} catch (e) { /* storage unavailable */ }
+if (!window.isSecureContext) {
+  $("loginError").textContent = "Open this page over https:// — browsers only allow encryption on secure pages.";
+}
+</script>
+</body>
+</html>

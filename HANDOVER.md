@@ -2,14 +2,19 @@
 
 Written from the cloud session on 2026-11-22 so a Claude Code session on Roberto's
 own computer can carry on. Trust the code and `git log` over this file if they disagree.
+**Status: everything Roberto asked for in code is done and pushed as version 1.5.3. What is
+left is getting the released files onto his Hostinger site (section "Deploying") and
+testing on his phone.**
 
 ## Where things are
 
 - Repo: https://github.com/PerezFranco/Balrog (public). **All work is on branch
   `ccr-ca9fd394-1clrrx`**; `main` still holds only the initial commit. No PR has been
   opened (only open one if Roberto asks).
-- Latest published release: **v1.5.2** (versionCode 8), the first signed with the permanent
-  release key. Key fingerprint (public) SHA-256
+- Latest published release: **v1.5.2** (versionCode 8) at the time of the first writing;
+  **1.5.3 (versionCode 9) was pushed afterwards and CI publishes it by itself** — check
+  https://github.com/PerezFranco/Balrog/releases for `v1.5.3` before deploying. 1.5.2 was
+  the first signed with the permanent release key. Key fingerprint (public) SHA-256
   `54:7F:69:6A:17:8B:B1:C6:C5:34:4C:B7:2A:1E:DD:E2:77:3D:04:86:53:29:13:BA:70:20:8A:BD:7D:33:DA:3A`.
   Roberto keeps the keystore and its passwords himself; the cloud session deleted its copy.
   Never commit key material.
@@ -28,73 +33,50 @@ own computer can carry on. Trust the code and `git log` over this file if they d
   compile- and unit-test-verified (by CI). A local machine with the SDK and `adb` can test
   on his phone, which is the biggest thing the cloud session could not do.
 
-## Done but not yet released (in the commit that adds this file)
+## What 1.5.3 contains (all verified in the cloud as noted)
 
-The sync token moved out of the PHP script into `balrog-config.php` beside it, so a new
-`balrog-sync.php` can be uploaded without re-entering the token:
-
-- `server/balrog-sync.php` reads `balrog-config.php` (`<?php return array('token' => '…');`,
-  at least 20 characters). No config or short token → HTTP 503 naming the file. Opening the
-  config in a browser prints nothing.
-- `server/balrog-config.sample.php` is the template. **Releases must only ever ship the
-  sample, never a `balrog-config.php`.**
-- `SyncClient` / the web page 503 text updated; `SyncTest` covers it against the real PHP
-  script (needs `php` on PATH, else those tests skip). Core tests passed in the cloud.
-- The deployed script on Roberto's site is still the old one with the token inside it.
-
-## Requested by Roberto, not started in code (all for release 1.5.3)
-
-1. **Rename `server/balrog.html` → `server/index.html`** and give it an elegant
-   **"Download the Android app" button**. Plan: the release workflow also attaches a copy
-   of the APK under the fixed name `Balrog.apk`, and the button links to
-   `https://github.com/PerezFranco/Balrog/releases/latest/download/Balrog.apk`. Update
-   `release.yml` (assets: `Balrog-$TAG.apk`, `Balrog.apk`, `server/balrog-sync.php`,
-   `server/balrog-config.sample.php`, `server/index.html`), the README and release notes.
-   The page's CSP is `default-src 'none'`; a plain `<a href>` is fine, and the page must not
-   fetch from other sites.
-2. **Balrog icon as favicon and shown in the page**, at login and when logged in. Source of
-   truth is `app/src/main/res/drawable/ic_launcher_foreground.xml` on `#121212`. A ready SVG
-   (rounded-square crop, renders well at 16–96 px):
-   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 21 68 68"><rect x="20" y="21" width="68" height="68" rx="15" fill="#121212"/><path d="M54,26 L78,34 V56 C78,70 68,79 54,84 C40,79 30,70 30,56 V34 Z" fill="#1C1B1F" stroke="#FF7A00" stroke-width="3"/><path d="M54,38 C58,44 62,46 62,53 C62,59 58,63 54,63 C50,63 46,59 46,53 C46,50 47,48 49,46 C49,50 51,51 52,51 C51,47 51,42 54,38 Z" fill="#FF7A00"/><path d="M50,66 H58 V70 H50 Z" fill="#FF7A00"/></svg>`
-   Embed inline plus as `data:` favicon (CSP already allows `img-src data:`); add a 64 px PNG
-   data URI for Safari.
-3. **Deterministic generator on the web page** (Roberto reversed his earlier "mobile only";
-   he still wants **no random generator** on the web). Port `DeterministicGenerator.kt`
-   exactly and **never change the algorithm**: PBKDF2-HMAC-SHA256, 100 000 iterations, 200
-   bytes, password = UTF-8 of `"My base is …. My case is …."`, salt = the
-   `"My salt 1 is {salt}{pepper}. My trim is {n}."` text hashed as **US-ASCII, every
-   non-ASCII code point becoming `?`** (that is what the Android app does), base64 of the
-   bytes, numbers from overlapping 5-char windows (step 2) of char codes, **stable** ranking,
-   mapping per type. Reference values: Base `Roberto`, Case `Joaquin`, Salt `Perez-Franco`,
-   no Pepper, Trim 10 → `mpyz\XK-%G` (letters+numbers+special), `orxycYT73Q`
-   (letters+numbers), `prxyeaWGDV` (letters only). Use WebCrypto `deriveBits`. Verify by
-   generating many vectors (including non-ASCII and emoji) with Kotlin and comparing to the
-   page. Peppers are vault records of type `PEPPER` with payload `{title, value}` (the page
-   already decrypts them but hides them); the generator view needs select/add/rename/delete,
-   shown as `a...L - Name` (first/last UTF-16 unit of the value) like the app. Recipes are
-   the text block `Base:/Case:/Salt:/Trim:/Type:(ANC|AN|A)/[Pepper: x...y]/[Sane: x...y]`
-   (see `DeterministicGenerator.Recipe`). No camera scanning on the PC.
-4. **"Full copy" → "Copy Recipe"** in the deterministic generator in both the app
-   (`DeterministicForm.kt`) and the web page, plus a **"Download QR" button** in both that
-   saves a PNG QR code of the recipe text, in exactly the format the app's "Scan QR" reads
-   (the same text `Recipe.toText()` produces, including `Pepper` and `Sane` lines).
-   - App: ZXing core is already on the classpath (`zxing-android-embedded` 4.3.0 exposes
-     core 3.4.1 as `api`). `QRCodeWriter`, EC level M, `MARGIN` 4, add the `CHARACTER_SET`
-     UTF-8 hint only when the text is non-ASCII, scale to ≥ ~1000 px, save with
-     `ActivityResultContracts.CreateDocument("image/png")`. Keep the pure encoding in its
-     own file so a JVM test can encode, decode with `QRCodeReader` and `Recipe.parse` it.
-   - Web: no external code at runtime. `npm pack qrcode-generator@1.4.4` (MIT, Kazuhiko Arase,
-     reviewed: no network/eval); inline it with its copyright header, override
-     `qrcode.stringToBytes` to UTF-8, draw to a canvas with a 4-module quiet zone, download
-     via `toBlob`. Verify by decoding the produced PNG with ZXing (`RGBLuminanceSource`,
-     `QRCodeReader`) and parsing it with `Recipe.parse`.
-   - The QR is as sensitive as the password when no Pepper is used; say so in a short note
-     next to the button. Use a generic file name (`balrog-recipe-qr.png`).
+1. **Sync token in `balrog-config.php`** beside the script (a PHP file that only returns
+   `array('token' => '…')`; at least 20 characters). `server/balrog-config.sample.php` is the
+   template; **releases only ever ship the sample, never a real config**. No/short/malformed
+   config → HTTP 503 naming the file. Opening the config in a browser prints nothing. The
+   script can now be replaced without touching the token. `SyncTest` runs the real script
+   with PHP's built-in server (skipped if `php` is missing).
+2. **`server/balrog.html` is now `server/index.html`**, with an elegant **Download the
+   Android app** button (login page, and a small link in the header). It points at
+   `https://github.com/PerezFranco/Balrog/releases/latest/download/Balrog.apk`; the release
+   workflow attaches a copy of the APK under that fixed name. Until 1.5.3 exists the button
+   404s. No third-party requests: the page's CSP is `default-src 'none'`.
+3. **Balrog icon** as inline SVG logo (login and header) and as SVG + 64 px PNG favicon
+   (both `data:` URIs). Source of truth: `app/src/main/res/drawable/ic_launcher_foreground.xml`
+   on `#121212`.
+4. **Deterministic generator on the web** (Generator tab; no random generator, as Roberto
+   wants). Port of `DeterministicGenerator.kt` — **never change the algorithm**. Verified in
+   headless Chromium: the page's `detPassword` equals the Kotlin output on 13 vectors
+   including accents, CJK and emoji (the Android app hashes the salt as US-ASCII, every
+   non-ASCII code point becoming `?`; the page reproduces that), and the three reference values
+   (`Roberto`/`Joaquin`/`Perez-Franco`/10 → `mpyz\XK-%G`, `orxycYT73Q`, `prxyeaWGDV`).
+   Peppers are vault records of type `PEPPER` `{title, value}`; the page can add, rename and
+   delete them, and a vault written by the page was opened and seal-verified by the phone's
+   `VaultBackup`. Recipes by paste only (no camera on a PC).
+5. **"Full copy" → "Copy Recipe"** in the app (`DeterministicForm.kt`) and the web page, plus
+   **Download QR** in both. App: ZXing `QRCodeWriter` (`security/RecipeQr.kt`, EC M, quiet zone
+   4, UTF-8 declared only for non-ASCII), saved with `CreateDocument("image/png")` as
+   `balrog-recipe-qr.png`; `RecipeQrTest` scans the drawn code back with ZXing and parses it
+   with `Recipe.parse`. Web: `qrcode-generator` 1.4.4 (MIT) inlined, UTF-8 bytes, canvas →
+   PNG. The PNGs the page downloaded were decoded with ZXing (same library as the app's
+   scanner) to exactly the "Copy Recipe" text and parsed by `Recipe.parse`. Both clear the
+   previous result as soon as a new generation starts, so a stale password/QR can't be copied.
+   The QR is as sensitive as the password when no Pepper is used; a note says so.
+6. App version 1.5.3 (versionCode 9); `zxing-core` 3.4.1 is declared explicitly.
 
 Constraints Roberto has stated: no autofill needed; the web page needs no random generator;
 the PC page is for organising and copying; he keeps using Bitwarden for now.
 
 ## Deploying to his Hostinger cPanel site
+
+Roberto wants the files **uploaded for him**. Files to deploy, from the **1.5.3 release
+assets** (not from a stale checkout): `balrog-sync.php`, `balrog-config.sample.php`,
+`index.html` (the old name was `balrog.html`).
 
 Roberto wants the files **uploaded for him**. The cloud session cannot: his hosting logins
 live on his PC. His other local sessions deploy over **SFTP using `sftp.exe` and generated
@@ -110,7 +92,7 @@ folder. Then, in this order:
    write `balrog-config.php` **only if it does not already exist** (`<?php return
    array('token' => '…');`). Do not echo the token anywhere.
 2. Upload the new `balrog-sync.php`, `balrog-config.sample.php` and `index.html` from the
-   GitHub release (not from a stale checkout).
+   GitHub release. Never upload or overwrite `balrog-config.php` after step 1.
 3. Verify with `curl`: the script without a token → 401 `Unauthorized.`; with the token →
    200/204; `…/balrog-config.php` → 200 with an empty body; `…/balrog-data/vault.php` → 404.
    Check the page loads and the vault unlocks (Roberto must do the final master-password
@@ -121,6 +103,9 @@ folder. Then, in this order:
 ## Keep in mind
 
 - Roberto likes to be told plainly what has *not* been tested. Be explicit about that.
+- Not verified anywhere yet: the Android UI on a real phone (CI only compiles and unit-tests
+  it): sync screens, Download QR through the system file picker, biometrics, folders, etc.
+  Also not verified: the real Hostinger deployment.
 - Verification already done in the cloud for the earlier releases: Kotlin core tests incl.
   full sync rounds against the real PHP script; the web page driven in headless Chromium
   against the real script and a phone-format vault, and the phone's `VaultBackup` verified

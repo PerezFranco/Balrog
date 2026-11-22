@@ -1,6 +1,17 @@
 package com.perezfranco.balrog.ui.screens
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.runtime.rememberCoroutineScope
+import com.perezfranco.balrog.security.RecipeQr
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -138,6 +149,7 @@ fun DeterministicForm(
         expectedSane = recipe.sane
         expectedPepper = recipe.pepperHint
         password = ""
+        resultRecipe = ""
         checksOut = null
         // Pick the Pepper for them when exactly one fits the recipe's hint.
         val matches = peppers.filter { DeterministicGenerator.hint(it.value) == recipe.pepperHint }
@@ -164,6 +176,23 @@ fun DeterministicForm(
 
     val recipeScanner = rememberLauncherForActivityResult(ScanContract()) { result ->
         result.contents?.let { applyRecipe(it, "scanned") }
+    }
+
+    // Saving the recipe QR code: the file picker returns a location, then the image is written.
+    val scope = rememberCoroutineScope()
+    var qrRecipe by remember { mutableStateOf("") }
+    val qrSaver = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("image/png")
+    ) { destination ->
+        if (destination != null) {
+            val recipeText = qrRecipe
+            scope.launch {
+                val saved = withContext(Dispatchers.IO) {
+                    runCatching { writeQrPng(context, destination, recipeText) }.isSuccess
+                }
+                say(if (saved) "QR code saved." else "Could not save the QR code.", error = !saved)
+            }
+        }
     }
 
     fun generate() {
@@ -197,6 +226,11 @@ fun DeterministicForm(
             return
         }
 
+        // The previous result goes at once, so it can't be copied or turned into a
+        // QR code while a new one is being worked out.
+        password = ""
+        resultRecipe = ""
+        checksOut = null
         generating = true
         message = null
         val usedType = type
@@ -402,9 +436,24 @@ fun DeterministicForm(
                     ClipboardHelper.copySecret(context, "recipe", resultRecipe)
                     say("Recipe copied.")
                 }) {
-                    Text("Full copy")
+                    Text("Copy Recipe")
                 }
             }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = {
+                qrRecipe = resultRecipe
+                qrSaver.launch("balrog-recipe-qr.png")
+            }) {
+                Icon(Icons.Filled.Download, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text("Download QR")
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "The recipe and its QR code are as sensitive as the password itself " +
+                    "unless you use a Pepper: anyone who has them can recreate it.",
+                style = MaterialTheme.typography.bodySmall,
+            )
             if (onUse != null) {
                 Spacer(Modifier.height(8.dp))
                 Button(
@@ -577,4 +626,15 @@ private fun ManagePeppersDialog(
             },
         )
     }
+}
+
+/** Draws [recipe] as a QR code and writes it as a PNG to [destination]. */
+private fun writeQrPng(context: Context, destination: Uri, recipe: String) {
+    val matrix = RecipeQr.encode(recipe)
+    val scale = RecipeQr.scaleFor(matrix)
+    val size = matrix.width * scale
+    val bitmap = Bitmap.createBitmap(RecipeQr.pixels(matrix, scale), size, size, Bitmap.Config.ARGB_8888)
+    val stream = context.contentResolver.openOutputStream(destination, "wt")
+        ?: throw IOException("Cannot open the destination")
+    stream.use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
 }

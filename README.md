@@ -152,16 +152,29 @@ changes unseen.
 Setting it up (any host with PHP 7+, such as cPanel shared hosting):
 
 1. From the [latest release](../../releases/latest), download
-   `balrog-sync.php` and `balrog.html`.
-2. Open `balrog-sync.php` in a text editor and replace `CHANGE-ME` with a
-   long random token (Balrog's generator can make one: 40 letters and
-   numbers).
-3. Upload both files to a folder on your site, e.g. `public_html/balrog/`.
-   The site must be served over `https://`.
+   `balrog-sync.php`, `balrog-config.sample.php` and `index.html`.
+2. Make your settings file: copy `balrog-config.sample.php` to
+   `balrog-config.php` and replace the placeholder with a long random token
+   (Balrog's generator can make one: 40 letters and numbers):
+   `<?php return array('token' => 'your-token');`
+3. Upload `balrog-sync.php`, `balrog-config.php` and `index.html` to a folder
+   on your site, e.g. `public_html/balrog/`. The site must be served over
+   `https://`.
 4. In the phone app: Settings → Sync → enter the script's address
    (`https://your-site/balrog/balrog-sync.php`) and the token.
-5. On a computer, open `https://your-site/balrog/balrog.html`, and enter the
-   token and your master password.
+5. On a computer, open `https://your-site/balrog/` and enter the token and
+   your master password.
+
+**Updating later:** replace `balrog-sync.php` and `index.html` with the ones
+from the new release and leave `balrog-config.php` alone. The token lives in
+that file, not in the script, and releases never contain one, so an update
+cannot overwrite it. (If you set sync up with an older release that had the
+token inside `balrog-sync.php`, create `balrog-config.php` with the same
+token *before* you replace the script.) The page, `index.html`, holds no
+secrets at all.
+
+The web page has a **Download the Android app** button that always fetches
+the latest APK from the GitHub releases.
 
 How it behaves:
 
@@ -173,8 +186,9 @@ How it behaves:
 - The web version decrypts in the browser, using the browser's built-in
   cryptography. It can search, copy usernames, passwords and two-factor
   codes, add, edit and delete entries and notes, and file them into folders
-  (drag an entry onto a folder). It has no generator and does not show
-  Peppers. It locks after five minutes without activity.
+  (drag an entry onto a folder). It also has the **deterministic generator**
+  with Peppers (see below), but no random-password generator. It locks after
+  five minutes without activity.
 - A new phone, or a reinstall, can be set up with **Restore from your sync
   server** on the first screen.
 
@@ -202,7 +216,8 @@ JavaScript and PHP versions; the unit tests pin the reference values. **Do
 not alter the algorithm** — any change silently changes every password ever
 derived with it.
 
-- **Recipes** use the Generator's "Full Copy" text format (`Base:` / `Case:`
+- **Recipes** use the standalone Generator app's text format (its "Full Copy"
+  button; Balrog calls it **Copy Recipe**) (`Base:` / `Case:`
   / `Salt:` / `Trim:` / `Type:` / `Pepper:` / `Sane:` lines) and can be
   pasted or scanned from a QR code in either direction. `Sane` holds the
   password's first and last character; after regenerating, Balrog says
@@ -212,8 +227,20 @@ derived with it.
   recipe records only a Pepper's first and last character; Balrog selects
   the matching Pepper when exactly one fits, and refuses to generate with
   one that does not match.
-- In the entry editor, **Generate → Deterministic…** fills the password and
-  saves its recipe with the entry; opening it again starts from that recipe.
+- **Download QR** (phone and web) saves a PNG QR code of the recipe, in
+  exactly the text "Scan QR" reads, so it can be scanned back in on the phone.
+  Treat it like the password: unless a Pepper is used, anyone holding the
+  recipe or its QR code can recreate the password.
+- **On the web page** the generator works the same and gives the same
+  passwords (checked against the Kotlin implementation, including accents,
+  CJK and emoji). It uses the phone's Peppers, can add, rename and delete
+  them, and takes recipes by paste (no camera scanning on a computer). One
+  detail kept from the Android app: non-ASCII characters in the Salt or
+  Pepper are replaced by `?` before hashing, so those passwords match the
+  app's.
+- In the entry editor on the phone, **Generate → Deterministic…** fills the
+  password and saves its recipe with the entry; opening it again starts from
+  that recipe.
 
 ### Importing from Bitwarden
 
@@ -295,6 +322,10 @@ is only as good as your memory of the password it was made under.
 See [LICENSE](LICENSE). The bundled wordlist
 (`app/src/main/res/raw/eff_large_wordlist.txt`) is the
 [EFF large wordlist](https://www.eff.org/dice) by the Electronic Frontier
-Foundation, used under CC BY 3.0 US. QR scanning uses
+Foundation, used under CC BY 3.0 US. QR scanning and drawing in the app use
+[ZXing](https://github.com/zxing/zxing) and
 [ZXing Android Embedded](https://github.com/journeyapps/zxing-android-embedded)
-(Apache 2.0).
+(Apache 2.0). The web page (`server/index.html`) embeds
+[qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4 by
+Kazuhiko Arase (MIT) to draw QR codes; its licence notice is kept in the file.
+"QR Code" is a registered trademark of DENSO WAVE INCORPORATED.

@@ -93,8 +93,12 @@ jobs:
             signing="Signed with a one-off key: to move to or from this release, save a backup in Settings, uninstall, install, then restore."
           fi
           notes="Download **Balrog-$TAG.apk** below and open it on your Android phone (Android 8.0 or newer). $signing"
-          notes="$notes"$'\n\n'"For sync and the web version, also download **balrog-sync.php** and **balrog.html**, and follow the README section *Sync and the web version*."
-          gh release create "$TAG" "Balrog-$TAG.apk" server/balrog-sync.php server/balrog.html \
+          notes="$notes"$'\n\n'"For sync and the web version, also download **balrog-sync.php**, **balrog-config.sample.php** and **index.html**, and follow the README section *Sync and the web version*. Keep your own balrog-config.php when updating: releases never contain one."
+          # Balrog.apk has a fixed name so that the web page's download button can
+          # always point at ".../releases/latest/download/Balrog.apk".
+          cp "Balrog-$TAG.apk" Balrog.apk
+          gh release create "$TAG" "Balrog-$TAG.apk" Balrog.apk \
+            server/balrog-sync.php server/balrog-config.sample.php server/index.html \
             --target "$GITHUB_SHA" \
             --title "Balrog ${TAG#v}" \
             --notes "$notes"
