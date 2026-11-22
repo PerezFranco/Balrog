@@ -50,6 +50,28 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/balrog.jks"
           echo "BALROG_KEYSTORE=$RUNNER_TEMP/balrog.jks" >> "$GITHUB_ENV"
+      - name: Check the release signing key
+        if: steps.version.outputs.needed && env.KEYSTORE_BASE64 != ''
+        env:
+          BALROG_KEYSTORE_PASSWORD: ${{ secrets.BALROG_KEYSTORE_PASSWORD }}
+          BALROG_KEY_ALIAS: ${{ secrets.BALROG_KEY_ALIAS }}
+          BALROG_KEY_PASSWORD: ${{ secrets.BALROG_KEY_PASSWORD }}
+        run: |
+          # Fail now, with a readable reason, rather than deep inside the build.
+          for name in BALROG_KEYSTORE_PASSWORD BALROG_KEY_ALIAS BALROG_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::The repository secret $name is missing. All four BALROG_* signing secrets are needed (see README, Releases)."
+              exit 1
+            fi
+          done
+          if ! keytool -list -v -keystore "$BALROG_KEYSTORE" \
+                 -storepass:env BALROG_KEYSTORE_PASSWORD -alias "$BALROG_KEY_ALIAS" > "$RUNNER_TEMP/key.txt" 2>&1; then
+            echo "::error::The signing keystore could not be opened with the given alias and password. Re-check BALROG_KEYSTORE_BASE64, BALROG_KEYSTORE_PASSWORD and BALROG_KEY_ALIAS."
+            exit 1
+          fi
+          # The fingerprint is public (it is inside every APK); handy for confirming
+          # that two releases were signed by the same key.
+          grep -E "Owner|Valid from|SHA256" "$RUNNER_TEMP/key.txt"
       - name: Build APK
         if: steps.version.outputs.needed
         env:
