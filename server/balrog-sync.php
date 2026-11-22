@@ -2,9 +2,18 @@
 /*
  * Balrog sync endpoint.
  *
- * Upload this one file to your website (for example into public_html), set
- * TOKEN below to a long random secret, and give Balrog the file's address
- * (https://your-site.example/balrog-sync.php) and the same token.
+ * Upload this file to your website (for example into public_html/balrog/),
+ * then create a second file next to it called balrog-config.php holding your
+ * token (copy balrog-config.sample.php, or see the README):
+ *
+ *     <?php return array('token' => 'a-long-random-secret-of-at-least-20-characters');
+ *
+ * Give Balrog this script's address (https://your-site.example/balrog/balrog-sync.php)
+ * and the same token.
+ *
+ * The token lives in balrog-config.php, not here, so you can replace this
+ * script with a newer version at any time without touching your token. Never
+ * upload a file with that name from anywhere else: it would overwrite yours.
  *
  * What it does: stores ONE file, your vault, exactly as Balrog sends it.
  * The vault is encrypted on your devices before it gets here; this script
@@ -14,10 +23,6 @@
  *
  * Needs PHP 7.0 or newer and nothing else.
  */
-
-// A long random secret, at least 20 characters. Balrog's generator can make
-// one: copy a 40-character "letters and numbers" password in here.
-const TOKEN = 'CHANGE-ME';
 
 // Largest vault accepted, in bytes.
 const MAX_BYTES = 33554432;
@@ -35,12 +40,23 @@ function fail($code, $message)
     exit;
 }
 
-if (TOKEN === 'CHANGE-ME' || strlen(TOKEN) < 20) {
-    fail(503, 'Set TOKEN in this script to a long random secret first.');
+// The token comes from balrog-config.php. That file is PHP that only returns
+// a value, so opening it in a browser shows nothing, and the token cannot be
+// read out of it over the web.
+$token = '';
+$configFile = __DIR__ . '/balrog-config.php';
+if (is_file($configFile)) {
+    $config = include $configFile;
+    if (is_array($config) && isset($config['token']) && is_string($config['token'])) {
+        $token = $config['token'];
+    }
+}
+if (strlen($token) < 20) {
+    fail(503, 'No token yet: create balrog-config.php next to this script (at least 20 characters). See the README.');
 }
 
 $given = isset($_SERVER['HTTP_X_BALROG_TOKEN']) ? $_SERVER['HTTP_X_BALROG_TOKEN'] : '';
-if (!hash_equals(TOKEN, $given)) {
+if (!hash_equals($token, $given)) {
     usleep(500000); // slow down guessing
     fail(401, 'Unauthorized.');
 }

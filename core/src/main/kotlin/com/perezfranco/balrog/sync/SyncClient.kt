@@ -99,7 +99,7 @@ class SyncClient(private val url: String, private val token: String) {
         in 300..399 -> SyncException(
             Failure.BAD_ADDRESS, "The address redirects elsewhere; use the script's exact address"
         )
-        503 -> SyncException(Failure.SERVER, "The sync script has no token set yet")
+        503 -> SyncException(Failure.SERVER, "The sync script has no token yet (create balrog-config.php next to it)")
         else -> SyncException(Failure.SERVER, "The server answered with error $code")
     }
 

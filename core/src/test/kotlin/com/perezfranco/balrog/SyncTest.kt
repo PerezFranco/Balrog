@@ -190,6 +190,44 @@ class SyncTest {
     }
 
     @Test
+    fun `the token comes from balrog-config php, which never reveals it`() {
+        assumeTrue("php not available", server != null)
+        reset()
+        val configFile = File(root, "balrog-config.php")
+        val original = configFile.readText()
+        fun status(): SyncClient.Failure? = try {
+            client().fetch(); null
+        } catch (e: SyncClient.SyncException) { e.failure }
+        try {
+            // Replacing the script (as an update does) leaves the token alone.
+            File(root, "balrog-sync.php").writeText(
+                File(root, "balrog-sync.php").readText() + "\n// an updated version\n"
+            )
+            assertNull(status())
+
+            // Opening the config in a browser shows nothing at all.
+            val page = java.net.URL("http://127.0.0.1:$port/balrog-config.php").openConnection()
+                as java.net.HttpURLConnection
+            assertEquals(200, page.responseCode)
+            assertEquals("", page.inputStream.readBytes().decodeToString())
+
+            // No config, a too-short token, or a malformed config: refused with
+            // a pointer to the fix, never open to everyone.
+            for (broken in listOf(null, configFor("short"), "<?php return 'oops';", "<?php return array();")) {
+                if (broken == null) configFile.delete() else configFile.writeText(broken)
+                assertEquals(SyncClient.Failure.SERVER, status())
+            }
+            val response = java.net.URL("http://127.0.0.1:$port/balrog-sync.php")
+                .openConnection() as java.net.HttpURLConnection
+            assertEquals(503, response.responseCode)
+            assertTrue(response.errorStream.readBytes().decodeToString().contains("balrog-config.php"))
+        } finally {
+            configFile.writeText(original)
+        }
+        assertNull(status())
+    }
+
+    @Test
     fun `plain http is refused for anything but this machine`() {
         try {
             SyncClient("http://example.com/balrog-sync.php", TOKEN).fetch()
@@ -205,6 +243,9 @@ class SyncTest {
 
     companion object {
         private const val TOKEN = "test-token-0123456789-abcdefghij"
+
+        /** What a user's balrog-config.php looks like. */
+        private fun configFor(token: String) = "<?php return array('token' => '$token');\n"
         private var server: Process? = null
         private var port = 0
         private lateinit var root: File
@@ -217,8 +258,8 @@ class SyncTest {
             val script = listOf("../server/balrog-sync.php", "server/balrog-sync.php")
                 .map(::File).firstOrNull { it.isFile } ?: return
             root = Files.createTempDirectory("balrog-sync").toFile()
-            File(root, "balrog-sync.php")
-                .writeText(script.readText().replace("'CHANGE-ME';", "'$TOKEN';"))
+            File(root, "balrog-sync.php").writeText(script.readText())
+            File(root, "balrog-config.php").writeText(configFor(TOKEN))
             port = ServerSocket(0).use { it.localPort }
             val process = try {
                 ProcessBuilder("php", "-S", "127.0.0.1:$port", "-t", root.path)
