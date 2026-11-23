@@ -3184,7 +3184,8 @@ function renderDetail() {
     const password = input(item.password, { type: "password", class: "mono" });
     const url = input(item.url, { inputmode: "url" });
     const totp = input(item.totp ? parseTotpSafe(item.totp).secret : "", { class: "mono", placeholder: "Setup key or otpauth:// link" });
-    const notes = h("textarea", {}); notes.value = item.notes || "";
+    // Short (about 3 lines) so Save / Revert / Delete stay on screen; still resizable by dragging.
+    const notes = h("textarea", { style: "min-height:60px;height:60px" }); notes.value = item.notes || "";
     const code = h("span", { class: "mono code" });
     const codeRow = h("div", { class: "field", style: "margin-top:6px" }, code,
       h("button", { class: "small", onclick: () => copy("Code", code.dataset.value || "") }, "Copy"));
