@@ -186,7 +186,13 @@ How it behaves:
 - The web version decrypts in the browser, using the browser's built-in
   cryptography. It can search, copy usernames, passwords and two-factor
   codes, add, edit and delete entries and notes, and file them into folders
-  (drag an entry onto a folder). It also has the **deterministic generator**
+  (drag an entry onto a folder). To sort many entries at once, tick them
+  (or **Select all** for what is shown: the open folder and search apply) and
+  use **Move to folder**, **Copy to folder** (duplicates the entries; the
+  originals stay) or **Delete**; each action is a single save, and deleting
+  asks once and says it also deletes on the phone. Peppers are not listed
+  there (they are managed under Generator); if one ever ends up in a
+  selection, only Delete is allowed. It also has the **deterministic generator**
   with Peppers (see below), but no random-password generator. It locks after
   five minutes without activity.
 - A new phone, or a reinstall, can be set up with **Restore from your sync

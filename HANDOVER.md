@@ -2,9 +2,11 @@
 
 Written from the cloud session on 2026-11-22 so a Claude Code session on Roberto's
 own computer can carry on. Trust the code and `git log` over this file if they disagree.
-**Status: everything Roberto asked for in code is done and pushed as version 1.5.3. What is
-left is getting the released files onto his Hostinger site (section "Deploying") and
-testing on his phone.**
+**Status: 1.5.3 is released and was deployed to Hostinger by a local session (live at
+perez-franco.com/balrog). Version 1.5.4 adds bulk actions to the web page (tick entries,
+select all, Move / Copy / Delete as single saves; see README), requested by Roberto through
+that local session; deploy `index.html` from the v1.5.4 release the same way. Still to do:
+testing the Android app on his phone.**
 
 ## Where things are
 

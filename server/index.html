@@ -132,6 +132,22 @@
   .pepper-panel { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 10px; background: var(--surface); }
   .pepper-row { display: flex; gap: 6px; align-items: center; padding: 4px 0; }
   .pepper-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  input[type=checkbox] { width: 16px; height: 16px; padding: 0; margin: 0; accent-color: var(--accent); flex: none; }
+  .tickwrap { display: flex; align-items: center; align-self: stretch; margin: 0; padding: 0 4px 0 0; cursor: pointer; }
+  .row.ticked { background: var(--raised); }
+  .listbar {
+    position: sticky; top: 0; z-index: 1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 7px 12px; background: var(--bg); border-bottom: 1px solid var(--line);
+  }
+  .listbar label.all { display: flex; gap: 8px; align-items: center; margin: 0; color: var(--text); font-size: 14px; cursor: pointer; }
+  .listbar .picked { font-weight: 600; }
+  .listbar .spacer { flex: 1; }
+  .bulkpanel {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 12px;
+    border-bottom: 1px solid var(--line); background: var(--surface);
+  }
+  .bulkpanel select, .bulkpanel input[type=text] { width: auto; min-width: 150px; flex: 1 1 150px; }
+  .bulknote { padding: 6px 12px; margin: 0; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); }
 </style>
 </head>
 <body>
@@ -2724,7 +2740,7 @@ async function request(method, token, body, base) {
 
 /** Everything known while unlocked; null when locked. */
 let vault = null;
-let view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null, gen: newGen() };
+let view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null, gen: newGen(), checked: new Set(), bulk: null };
 let lockTimer = null, refreshTimer = null, clipboardTimer = null, codeTimer = null;
 
 async function loadFromServer(token, dek, password) {
@@ -2814,7 +2830,7 @@ async function refresh() {
 
 function lock(message) {
   vault = null;
-  view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null, gen: newGen() };
+  view = { type: "PASSWORD", folder: null, query: "", selected: null, draft: null, gen: newGen(), checked: new Set(), bulk: null };
   clearTimeout(lockTimer); clearInterval(refreshTimer); clearInterval(codeTimer);
   $("app").classList.add("hidden");
   $("login").classList.remove("hidden");
@@ -2915,7 +2931,7 @@ function render() {
 function renderNav() {
   const typeButton = (type, label) => h("button", {
     class: "item" + (view.type === type ? " active" : ""),
-    onclick: () => { view.type = type; view.selected = null; view.draft = null; render(); },
+    onclick: () => { view.type = type; view.selected = null; view.draft = null; clearBulk(); render(); },
   }, h("span", { text: label }), type === "GENERATOR" ? null : h("span", { class: "count", text: entries(type).length }));
 
   if (view.type === "GENERATOR") {
@@ -2933,7 +2949,7 @@ function renderNav() {
   const folderButton = (folder, label) => {
     const el = h("button", {
       class: "item" + (view.folder === folder ? " active" : ""),
-      onclick: () => { view.folder = folder; render(); },
+      onclick: () => { view.folder = folder; clearBulk(); render(); },
     }, h("span", { text: label }), h("span", { class: "count", text: count(folder) }));
     if (folder !== null) {
       // Drop an entry here to file it under this folder.
@@ -2961,8 +2977,32 @@ function renderNav() {
       h("p", { class: "muted", style: "font-size:12px" }, "Drag an entry onto a folder to move it.")));
 }
 
+// ---- Ticking entries and acting on many at once -----------------------------------------
+// The selection (view.checked) only ever holds entries that are currently shown, and is
+// dropped whenever the folder, search or kind of entry changes, so an action can never
+// touch something the user cannot see. Each action is ONE vault save, so sync is not hit
+// once per entry.
+
+const entriesWord = (n) => n + (n === 1 ? " entry" : " entries");
+
+function clearBulk() { view.checked.clear(); view.bulk = null; }
+
+/** Forget ticked entries that are gone or no longer shown (e.g. changed on another device). */
+function pruneChecked(shown) {
+  const visibleUids = new Set(shown.map((e) => e.uid));
+  for (const uid of [...view.checked]) {
+    // Peppers are never listed here; they are only kept so that a selection which
+    // contains one is handled correctly (Delete works, Move and Copy refuse).
+    const pepper = vault.items.has(uid) && typeOf(uid) === "PEPPER";
+    if (!vault.items.has(uid) || (!visibleUids.has(uid) && !pepper)) view.checked.delete(uid);
+  }
+  if (!view.checked.size) view.bulk = null;
+}
+
 function renderList() {
-  const rows = visible().map((e) => {
+  const shown = visible();
+  pruneChecked(shown);
+  const rows = shown.map((e) => {
     const buttons = [];
     if (view.type === "PASSWORD") {
       if (e.totp) buttons.push(h("button", { class: "small", title: "Copy two-factor code", onclick: async (ev) => {
@@ -2972,18 +3012,138 @@ function renderList() {
       if (e.username) buttons.push(h("button", { class: "small", title: "Copy username", onclick: (ev) => { ev.stopPropagation(); copy("Username", e.username); } }, "User"));
       buttons.push(h("button", { class: "small", title: "Copy password", onclick: (ev) => { ev.stopPropagation(); copy("Password", e.password || ""); } }, "Pass"));
     }
+    const tick = h("input", { type: "checkbox", "aria-label": "Select " + (e.title || "(untitled)") });
+    tick.checked = view.checked.has(e.uid);
+    tick.addEventListener("change", () => {
+      if (tick.checked) view.checked.add(e.uid); else view.checked.delete(e.uid);
+      if (!view.checked.size) view.bulk = null;
+      renderList();
+    });
     return h("div", {
-      class: "row" + (view.selected === e.uid ? " active" : ""), draggable: "true",
+      class: "row" + (view.selected === e.uid ? " active" : "") + (view.checked.has(e.uid) ? " ticked" : ""), draggable: "true",
       ondragstart: (ev) => ev.dataTransfer.setData("text/plain", e.uid),
       onclick: () => select(e.uid),
     },
+    // Ticking is separate from opening: clicks on the box never reach the row.
+    h("label", { class: "tickwrap", onclick: (ev) => ev.stopPropagation() }, tick),
     h("div", { class: "text" },
       h("div", { class: "title", text: e.title || "(untitled)" }),
       h("div", { class: "sub", text: view.type === "PASSWORD" ? (e.username || "") : (e.folder || "") })),
     ...buttons);
   });
-  $("list").replaceChildren(...(rows.length ? rows : [h("div", { class: "empty", text:
-    view.query ? "Nothing matches." : "Nothing here yet." })]));
+  $("list").replaceChildren(...bulkHeader(shown),
+    ...(rows.length ? rows : [h("div", { class: "empty", text: view.query ? "Nothing matches." : "Nothing here yet." })]));
+}
+
+/** The select-all bar, the action bar once something is ticked, and the folder chooser. */
+function bulkHeader(shown) {
+  if (!shown.length && !view.checked.size) return [];
+  const ticked = shown.filter((e) => view.checked.has(e.uid)).length;
+  const all = h("input", { type: "checkbox", id: "tickAll", disabled: !shown.length, "aria-label": "Select all shown entries" });
+  all.checked = shown.length > 0 && ticked === shown.length;
+  all.indeterminate = ticked > 0 && ticked < shown.length;
+  all.addEventListener("change", () => {
+    for (const e of shown) { if (all.checked) view.checked.add(e.uid); else view.checked.delete(e.uid); }
+    if (!view.checked.size) view.bulk = null;
+    renderList();
+  });
+  const n = view.checked.size;
+  const hasPepper = [...view.checked].some((uid) => typeOf(uid) === "PEPPER");
+  const bar = h("div", { class: "listbar", id: "listbar" },
+    h("label", { class: "all" }, all, "Select all (" + shown.length + ")"),
+    n ? h("span", { class: "picked", role: "status", text: n + " selected" }) : null,
+    n ? h("button", { class: "small", id: "bulkClear", onclick: () => { clearBulk(); renderList(); } }, "Clear") : null,
+    n ? h("span", { class: "spacer" }) : null,
+    n ? h("button", { class: "small", id: "bulkMove", disabled: hasPepper, onclick: () => { view.bulk = { mode: "move" }; renderList(); } }, "Move to folder…") : null,
+    n ? h("button", { class: "small", id: "bulkCopy", disabled: hasPepper, onclick: () => { view.bulk = { mode: "copy" }; renderList(); } }, "Copy to folder…") : null,
+    n ? h("button", { class: "small danger", id: "bulkDelete", onclick: bulkDelete }, "Delete") : null);
+  const out = [bar];
+  if (n && hasPepper) {
+    out.push(h("p", { class: "bulknote", id: "bulkPepperNote", text:
+      "The selection includes a Pepper. Peppers can't be filed in folders, so Move and Copy are off; Delete still works." }));
+  } else if (n && view.bulk) {
+    out.push(bulkPanel(view.bulk.mode));
+  }
+  return out;
+}
+
+function bulkPanel(mode) {
+  const n = view.checked.size;
+  const names = folders();
+  const choices = [""].concat(names);                     // "" is "No folder"
+  const select = h("select", { id: "bulkFolder", "aria-label": "Folder" },
+    h("option", { value: "0" }, "No folder"),
+    ...names.map((name, i) => h("option", { value: String(i + 1) }, name)),
+    h("option", { value: "new" }, "New folder…"));
+  const name = h("input", { type: "text", id: "bulkNewName", placeholder: "New folder name", autocomplete: "off", spellcheck: "false" });
+  const sync = () => name.classList.toggle("hidden", select.value !== "new");
+  select.addEventListener("change", sync);
+  select.value = names.length ? "1" : "new";
+  sync();
+  const go = h("button", { class: "primary", id: "bulkGo", onclick: () => {
+    let folder = select.value === "new" ? name.value.trim() : choices[Number(select.value)];
+    if (select.value === "new" && !folder) { setStatus("Type a name for the new folder.", true); name.focus(); return; }
+    if (mode === "move") bulkMove(folder); else bulkCopy(folder);
+  } }, (mode === "move" ? "Move " : "Copy ") + entriesWord(n));
+  setTimeout(() => select.focus(), 0);
+  return h("div", { class: "bulkpanel", id: "bulkPanel" },
+    h("span", { text: (mode === "move" ? "Move to:" : "Copy to:") }), select, name, go,
+    h("button", { onclick: () => { view.bulk = null; renderList(); } }, "Cancel"));
+}
+
+async function bulkMove(folder) {
+  const uids = [...view.checked];
+  const changing = uids.filter((uid) => (vault.items.get(uid).folder || "") !== folder).length;
+  view.bulk = null;
+  if (!changing) { setStatus("They are already in " + (folder || "No folder") + "."); renderList(); return; }
+  setStatus("Moving…");
+  if (await moveToFolder(uids, folder)) {
+    clearBulk(); render();
+    setStatus("Moved " + entriesWord(changing) + " to " + (folder || "No folder") + ".");
+  }
+}
+
+/** Duplicates each ticked entry into [folder]: new id, same content and kind; originals stay. */
+async function bulkCopy(folder) {
+  const uids = [...view.checked];
+  view.bulk = null;
+  let made = 0;
+  setStatus("Copying…");
+  try {
+    await commit(async (file, items) => {
+      made = 0;
+      for (const uid of uids) {
+        const item = items.get(uid);
+        const record = file.records.find((r) => r.uid === uid);
+        if (item && record && record.type !== "PEPPER") {
+          await putItem(file, items, newUid(), record.type, { ...item, folder });
+          made++;
+        }
+      }
+    });
+    clearBulk(); render();
+    setStatus("Copied " + entriesWord(made) + " to " + (folder || "No folder") + "; the originals are kept.");
+  } catch (e) { setStatus(e.message, true); renderList(); }
+}
+
+async function bulkDelete() {
+  const uids = [...view.checked];
+  const n = uids.length;
+  const peppers = uids.filter((uid) => typeOf(uid) === "PEPPER").length;
+  const text = "Delete " + entriesWord(n) + "? " +
+    (peppers ? "This includes " + peppers + (peppers === 1 ? " Pepper" : " Peppers") + ": passwords made with a Pepper cannot be recreated without it. " : "") +
+    "They will be deleted on your phone too.";
+  if (!confirm(text)) return;
+  setStatus("Deleting…");
+  try {
+    await commit(async (file, items) => {
+      for (const uid of uids) if (items.has(uid)) removeItem(file, items, uid);
+    });
+    if (uids.includes(view.selected)) view.selected = null;
+    if (view.draft && uids.includes(view.draft.uid)) view.draft = null;
+    clearBulk(); render();
+    setStatus("Deleted " + entriesWord(n) + ".");
+  } catch (e) { setStatus(e.message, true); renderList(); }
 }
 
 function select(uid) {
@@ -2994,6 +3154,7 @@ function select(uid) {
 
 function startNew(type) {
   view.type = type;
+  clearBulk();
   view.selected = null;
   view.draft = type === "PASSWORD"
     ? { uid: null, type, title: "", username: "", password: "", url: "", notes: "", totp: "", folder: view.folder || "" }
@@ -3111,6 +3272,7 @@ const stripMeta = ({ uid, type, ...rest }) => rest;
 function parseTotpSafe(value) { try { return parseTotp(value); } catch (e) { return { secret: "" }; } }
 
 async function moveToFolder(uids, folder) {
+  let ok = true;
   try {
     await commit(async (file, items) => {
       for (const uid of uids) {
@@ -3121,14 +3283,15 @@ async function moveToFolder(uids, folder) {
         }
       }
     });
-  } catch (e) { setStatus(e.message, true); }
+  } catch (e) { setStatus(e.message, true); ok = false; }
   render();
+  return ok;
 }
 
 function newFolder() {
   const name = (prompt("Name of the new folder. It appears once an entry is in it — the selected entry is moved there now.") || "").trim();
   if (!name) return;
-  if (view.selected) moveToFolder([view.selected], name).then(() => { view.folder = name; render(); });
+  if (view.selected) moveToFolder([view.selected], name).then(() => { view.folder = name; clearBulk(); render(); });
   else setStatus("Select an entry first, then create the folder for it.", true);
 }
 
@@ -3139,7 +3302,7 @@ function renameFolder() {
   const uids = vault.file.records
     .filter((r) => r.type !== "PEPPER" && vault.items.has(r.uid) && (vault.items.get(r.uid).folder || "") === old)
     .map((r) => r.uid);
-  moveToFolder(uids, name.trim()).then(() => { view.folder = name.trim() || null; render(); });
+  moveToFolder(uids, name.trim()).then(() => { view.folder = name.trim() || null; clearBulk(); render(); });
 }
 
 // ---- Deterministic generator -------------------------------------------------------
@@ -3433,6 +3596,7 @@ $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") unlock
 $("lock").addEventListener("click", () => lock());
 $("search").addEventListener("input", (e) => {
   view.query = e.target.value;
+  clearBulk();
   if (view.type === "GENERATOR") { view.type = "PASSWORD"; render(); } else renderList();
 });
 $("newPassword").addEventListener("click", () => startNew("PASSWORD"));
