@@ -57,6 +57,10 @@
   #login .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
   #login .check input { width: auto; }
   #login button { width: 100%; margin-top: 18px; padding: 10px; }
+  #login .field { gap: 6px; }
+  #login .field input { min-width: 0; }
+  /* One fixed width, so "View" and "Hide" never make the two fields end at different points. */
+  #login .field button { width: 3.9em; flex: none; margin-top: 0; padding: 3px 0; }
 
   #app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
   header {
@@ -161,13 +165,19 @@
     <p class="muted">Your vault is decrypted in this browser only. Nothing readable is sent to the server.</p>
   </div>
   <label for="token">Sync token</label>
-  <input id="token" type="password" autocomplete="off" spellcheck="false">
+  <div class="field">
+    <input id="token" type="password" autocomplete="off" spellcheck="false">
+    <button type="button" class="small" id="viewToken" aria-label="View the sync token" aria-pressed="false">View</button>
+  </div>
   <div class="check">
     <input id="remember" type="checkbox">
     <label for="remember" style="margin:0">Remember the token on this computer</label>
   </div>
   <label for="password">Master password</label>
-  <input id="password" type="password" autocomplete="off">
+  <div class="field">
+    <input id="password" type="password" autocomplete="off">
+    <button type="button" class="small" id="viewPassword" aria-label="View the master password" aria-pressed="false">View</button>
+  </div>
   <button id="unlock" class="primary">Unlock</button>
   <p id="loginError" class="error" role="alert"></p>
   <a class="download" href="https://github.com/PerezFranco/Balrog/releases/latest/download/Balrog.apk" rel="noopener noreferrer">
@@ -2837,6 +2847,7 @@ function lock(message) {
   $("nav").replaceChildren(); $("list").replaceChildren(); $("detail").replaceChildren();
   $("search").value = "";
   $("password").value = "";
+  hideLoginSecrets();
   $("loginError").textContent = message || "";
   $("password").focus();
 }
@@ -2851,6 +2862,7 @@ async function unlock() {
   const token = $("token").value.trim();
   const password = $("password").value;
   if (!token || !password) { $("loginError").textContent = "Enter the sync token and your master password."; return; }
+  hideLoginSecrets();
   $("unlock").disabled = true;
   $("unlock").textContent = "Unlocking…";
   $("loginError").textContent = "";
@@ -2861,6 +2873,7 @@ async function unlock() {
       else localStorage.removeItem("balrog.token");
     } catch (e) { /* storage unavailable: just don't remember */ }
     $("password").value = "";
+    hideLoginSecrets();
     $("login").classList.add("hidden");
     $("app").classList.remove("hidden");
     setStatus("In sync");
@@ -2870,11 +2883,32 @@ async function unlock() {
     $("search").focus();
   } catch (e) {
     vault = null;
+    hideLoginSecrets();
     $("loginError").textContent = e.message;
   } finally {
     $("unlock").disabled = false;
     $("unlock").textContent = "Unlock";
   }
+}
+
+// ---- Login screen: View / Hide for the two secret fields -------------------------------
+// The accessible name stays the same and aria-pressed carries the state, as is usual for
+// a toggle button; only the visible word changes.
+const LOGIN_FIELDS = [["token", "viewToken"], ["password", "viewPassword"]];
+
+function setLoginFieldShown(inputId, buttonId, shown) {
+  $(inputId).type = shown ? "text" : "password";
+  $(buttonId).textContent = shown ? "Hide" : "View";
+  $(buttonId).setAttribute("aria-pressed", shown ? "true" : "false");
+}
+
+/** Both fields back to hidden: whenever the login screen comes back, and before the vault opens. */
+function hideLoginSecrets() {
+  for (const [input, button] of LOGIN_FIELDS) setLoginFieldShown(input, button, false);
+}
+
+for (const [input, button] of LOGIN_FIELDS) {
+  $(button).addEventListener("click", () => setLoginFieldShown(input, button, $(input).type === "password"));
 }
 
 function setStatus(text, isError) {
